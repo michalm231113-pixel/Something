@@ -587,9 +587,9 @@ pingLabel.TextXAlignment = Enum.TextXAlignment.Right
 pingLabel.ZIndex = 903
 pingLabel.Parent = performanceFrame
 local PANEL_EMOTES = {
-    {Key = "Panel_TakeTheL", Label = "Elka / Take The L", Id = 134447491925889},
+    {Key = "Panel_TakeTheL", Label = "Elka / Take The L", Id = 105367539610328},
     {Key = "Panel_ChillFloat", Label = "Siedzenie w powietrzu", Id = 134795656394655},
-    {Key = "Panel_MM2FakeDead", Label = "MM2 Fake Dead", Id = 75954983685501},
+    {Key = "Panel_MM2FakeDead", Label = "MM2 Fake Dead", Id = 83548980186247},
 }
 local activeEmoteTrack = nil
 local activeEmoteAnimation = nil
