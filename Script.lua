@@ -5,10 +5,8 @@ local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ContextActionService = game:GetService("ContextActionService")
 local VirtualUser = game:GetService("VirtualUser")
-
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
 local milion = 1000000
 local CONFIG = {
     UI = {
@@ -92,7 +90,6 @@ local CONFIG = {
         LocalPlayer = Enum.KeyCode.Y,
     },
 }
-
 local function safeCall(label, callback, ...)
     local ok, result = pcall(callback, ...)
     if not ok then
@@ -101,7 +98,6 @@ local function safeCall(label, callback, ...)
     end
     return result
 end
-
 local state = {
     InfiniteJump = false,
     Flying = false,
@@ -120,7 +116,6 @@ local state = {
     TargetIndex = 1,
     CurrentTarget = nil,
 }
-
 local Character
 local Humanoid
 local HumanoidRootPart
@@ -130,45 +125,38 @@ local gameUseJumpPower = true
 local humanoidDiedConnection
 local walkSpeedChangedConnection
 local jumpPowerChangedConnection
-
 local Connections = {}
 local ActionNames = {}
 local destroyed = false
-
 local function addConnection(connection)
     if connection then
         table.insert(Connections, connection)
     end
     return connection
 end
-
 local function disconnectConnection(connection)
     if connection and connection.Connected then
         connection:Disconnect()
     end
 end
-
 local function cleanupConnections()
     for _, connection in ipairs(Connections) do
         disconnectConnection(connection)
     end
     table.clear(Connections)
 end
-
 local existingGui = PlayerGui:FindFirstChild("MegaPanelV13")
 if existingGui then
     safeCall("destroy old GUI", function()
         existingGui:Destroy()
     end)
 end
-
 local function addCorner(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius or CONFIG.UI.CornerRadius)
     corner.Parent = instance
     return corner
 end
-
 local function addStroke(instance, color, transparency, thickness)
     local stroke = Instance.new("UIStroke")
     stroke.Color = color or Color3.new(1, 1, 1)
@@ -177,7 +165,6 @@ local function addStroke(instance, color, transparency, thickness)
     stroke.Parent = instance
     return stroke
 end
-
 local function addPadding(instance, left, right, top, bottom)
     local padding = Instance.new("UIPadding")
     padding.PaddingLeft = UDim.new(0, left or 0)
@@ -187,7 +174,6 @@ local function addPadding(instance, left, right, top, bottom)
     padding.Parent = instance
     return padding
 end
-
 local function getKeyDisplay(keyCode)
     local display = safeCall("get key display", function()
         return UserInputService:GetStringForKeyCode(keyCode)
@@ -198,7 +184,6 @@ local function getKeyDisplay(keyCode)
     local raw = tostring(keyCode):gsub("Enum.KeyCode.", "")
     return string.upper(raw)
 end
-
 local function applySciFiSurface(frame)
     frame.BackgroundColor3 = CONFIG.UI.Dark
     frame.BackgroundTransparency = 0.04
@@ -232,7 +217,6 @@ local function applySciFiSurface(frame)
         end
     end
 end
-
 local gui = Instance.new("ScreenGui")
 gui.Name = "MegaPanelV13"
 gui.ResetOnSpawn = false
@@ -241,7 +225,6 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 gui.DisplayOrder = CONFIG.UI.DisplayOrder
 gui.Enabled = true
 gui.Parent = PlayerGui
-
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainPanel"
 mainFrame.Size = UDim2.fromOffset(CONFIG.UI.MainSize.X, CONFIG.UI.MainSize.Y)
@@ -250,10 +233,8 @@ mainFrame.BackgroundColor3 = CONFIG.UI.Panel
 mainFrame.BorderSizePixel = 0
 mainFrame.ZIndex = 1000
 mainFrame.Parent = gui
-
 addCorner(mainFrame, CONFIG.UI.CornerRadius)
 applySciFiSurface(mainFrame)
-
 local title = Instance.new("TextLabel")
 title.Name = "Title"
 title.Size = UDim2.new(1, -54, 0, 38)
@@ -266,7 +247,6 @@ title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.ZIndex = 1001
 title.Parent = mainFrame
-
 local versionLabel = Instance.new("TextLabel")
 versionLabel.Name = "VersionLabel"
 versionLabel.Size = UDim2.new(1, -24, 0, 20)
@@ -279,7 +259,6 @@ versionLabel.Font = Enum.Font.Gotham
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
 versionLabel.ZIndex = 1001
 versionLabel.Parent = mainFrame
-
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "Close"
 closeButton.Size = UDim2.fromOffset(32, 32)
@@ -292,10 +271,8 @@ closeButton.Font = Enum.Font.GothamBold
 closeButton.AutoButtonColor = false
 closeButton.ZIndex = 1005
 closeButton.Parent = mainFrame
-
 addCorner(closeButton, 7)
 addStroke(closeButton, Color3.fromRGB(255, 255, 255), 0.42, 1)
-
 local targetStatus = Instance.new("TextLabel")
 targetStatus.Name = "TargetStatus"
 targetStatus.Size = UDim2.new(1, -24, 0, 28)
@@ -308,11 +285,9 @@ targetStatus.Font = Enum.Font.GothamBold
 targetStatus.TextXAlignment = Enum.TextXAlignment.Left
 targetStatus.ZIndex = 1001
 targetStatus.Parent = mainFrame
-
 addCorner(targetStatus, 7)
 addStroke(targetStatus, Color3.fromRGB(255, 255, 255), 0.78, 1)
 addPadding(targetStatus, 10, 8, 0, 0)
-
 local buttonIndex = 0
 local function createButton(parent, text, keyCode)
     buttonIndex += 1
@@ -392,7 +367,6 @@ local function createButton(parent, text, keyCode)
     end))
     return button, buttonText
 end
-
 local function setButtonState(button, enabled, customLabel)
     if not button or not button.Parent then
         return
@@ -408,13 +382,11 @@ local function setButtonState(button, enabled, customLabel)
         {BackgroundColor3 = enabled and CONFIG.UI.Orange or CONFIG.UI.Button}
     ):Play()
 end
-
 local function createMainButton(text, keyCode)
     local button = createButton(mainFrame, text, keyCode)
     button.Position = UDim2.fromOffset(12, 108 + ((buttonIndex - 1) * 46))
     return button
 end
-
 local infiniteJumpButton = createMainButton("Inf. Jump: OFF", CONFIG.FeatureKeys.InfiniteJump)
 local flyButton = createMainButton("Flying: OFF", CONFIG.FeatureKeys.Fly)
 local aimbotButton = createMainButton("Aimbot: OFF", CONFIG.FeatureKeys.Aimbot)
@@ -423,7 +395,6 @@ local bhopButton = createMainButton("Bhop: OFF", CONFIG.FeatureKeys.Bhop)
 local highlightButton = createMainButton("Highlight: ON", CONFIG.FeatureKeys.Highlight)
 local playerTPButton = createMainButton("Player TP", CONFIG.FeatureKeys.PlayerTP)
 local localPlayerButton = createMainButton("LocalPlayer", CONFIG.FeatureKeys.LocalPlayer)
-
 local noteLabel = Instance.new("TextLabel")
 noteLabel.Name = "Note"
 noteLabel.Size = UDim2.new(1, -24, 0, 50)
@@ -437,7 +408,6 @@ noteLabel.TextXAlignment = Enum.TextXAlignment.Left
 noteLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 noteLabel.ZIndex = 1001
 noteLabel.Parent = mainFrame
-
 local localFrame = Instance.new("Frame")
 localFrame.Name = "LocalPlayerPanel"
 localFrame.Size = UDim2.fromOffset(CONFIG.UI.LocalSize.X, CONFIG.UI.LocalSize.Y)
@@ -447,10 +417,8 @@ localFrame.BorderSizePixel = 0
 localFrame.Visible = false
 localFrame.ZIndex = 900
 localFrame.Parent = gui
-
 addCorner(localFrame, CONFIG.UI.CornerRadius)
 applySciFiSurface(localFrame)
-
 local localTitle = Instance.new("TextLabel")
 localTitle.Name = "LocalTitle"
 localTitle.Size = UDim2.new(1, -20, 0, 34)
@@ -463,7 +431,6 @@ localTitle.Font = Enum.Font.GothamBold
 localTitle.TextXAlignment = Enum.TextXAlignment.Left
 localTitle.ZIndex = 901
 localTitle.Parent = localFrame
-
 local localScroll = Instance.new("ScrollingFrame")
 localScroll.Name = "Scroll"
 localScroll.Size = UDim2.new(1, -16, 1, -52)
@@ -475,14 +442,11 @@ localScroll.CanvasSize = UDim2.fromOffset(0, 0)
 localScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 localScroll.ZIndex = 901
 localScroll.Parent = localFrame
-
 local localLayout = Instance.new("UIListLayout")
 localLayout.Padding = UDim.new(0, 8)
 localLayout.SortOrder = Enum.SortOrder.LayoutOrder
 localLayout.Parent = localScroll
-
 addPadding(localScroll, 4, 4, 4, 8)
-
 local localButtonCount = 0
 local function createLocalButton(text, keyCode)
     localButtonCount += 1
@@ -507,7 +471,6 @@ local function createSectionHeader(text)
     header.Parent = localScroll
     return header
 end
-
 local function createNumberBox(placeholder, initialValue)
     localButtonCount += 1
     local container = Instance.new("Frame")
@@ -550,12 +513,10 @@ local function createNumberBox(placeholder, initialValue)
     addPadding(box, 10, 10, 0, 0)
     return box
 end
-
 local walkSpeedToggle = createLocalButton("WalkSpeed: OFF", nil)
 local walkSpeedInput = createNumberBox("WalkSpeed", state.WalkSpeed)
 local jumpPowerToggle = createLocalButton("JumpPower: OFF", nil)
 local jumpPowerInput = createNumberBox("JumpPower", state.JumpPower)
-
 local separatorSlot = Instance.new("Frame")
 separatorSlot.Name = "Separator"
 separatorSlot.Size = UDim2.new(1, -8, 0, 14)
@@ -563,7 +524,6 @@ separatorSlot.BackgroundTransparency = 1
 separatorSlot.LayoutOrder = localButtonCount + 1
 separatorSlot.ZIndex = 902
 separatorSlot.Parent = localScroll
-
 local separator = Instance.new("Frame")
 separator.Size = UDim2.new(1, 0, 0, 1)
 separator.AnchorPoint = Vector2.new(0, 0.5)
@@ -573,14 +533,11 @@ separator.BackgroundTransparency = 0.68
 separator.BorderSizePixel = 0
 separator.ZIndex = 903
 separator.Parent = separatorSlot
-
 localButtonCount += 1
-
 local flySpeedInput = createNumberBox("FlySpeed", state.FlySpeed)
 local antiAFKButton = createLocalButton("AntiAFK: OFF", CONFIG.FeatureKeys.AntiAFK)
 local clickTPButton = createLocalButton("Click TP: OFF", CONFIG.FeatureKeys.ClickTP)
 local fullBrightButton = createLocalButton("FullBright: OFF", CONFIG.FeatureKeys.FullBright)
-
 local performanceHeader = Instance.new("TextLabel")
 performanceHeader.Name = "PerformanceHeader"
 performanceHeader.Size = UDim2.new(1, -8, 0, 22)
@@ -590,13 +547,10 @@ performanceHeader.TextColor3 = CONFIG.UI.White
 performanceHeader.TextSize = 12
 performanceHeader.Font = Enum.Font.GothamBold
 performanceHeader.TextXAlignment = Enum.TextXAlignment.Left
-
 localButtonCount += 1
-
 performanceHeader.LayoutOrder = localButtonCount
 performanceHeader.ZIndex = 902
 performanceHeader.Parent = localScroll
-
 local performanceFrame = Instance.new("Frame")
 performanceFrame.Name = "Performance"
 performanceFrame.Size = UDim2.new(1, -8, 0, 42)
@@ -606,10 +560,8 @@ localButtonCount += 1
 performanceFrame.LayoutOrder = localButtonCount
 performanceFrame.ZIndex = 902
 performanceFrame.Parent = localScroll
-
 addCorner(performanceFrame, 7)
 addStroke(performanceFrame, Color3.fromRGB(255, 255, 255), 0.68, 1)
-
 local fpsLabel = Instance.new("TextLabel")
 fpsLabel.Name = "FPS"
 fpsLabel.Size = UDim2.new(0.5, -4, 1, 0)
@@ -622,7 +574,6 @@ fpsLabel.Font = Enum.Font.GothamBold
 fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
 fpsLabel.ZIndex = 903
 fpsLabel.Parent = performanceFrame
-
 local pingLabel = Instance.new("TextLabel")
 pingLabel.Name = "Ping"
 pingLabel.Size = UDim2.new(0.5, -8, 1, 0)
@@ -635,7 +586,6 @@ pingLabel.Font = Enum.Font.GothamBold
 pingLabel.TextXAlignment = Enum.TextXAlignment.Right
 pingLabel.ZIndex = 903
 pingLabel.Parent = performanceFrame
-
 local PANEL_EMOTES = {
     {Key = "Panel_Lay", Label = "Leżenie", Id = 104104787736608},
     {Key = "Panel_TakeTheL", Label = "Elka / Take The L", Id = 134447491925889},
@@ -647,12 +597,10 @@ local PANEL_EMOTES = {
     {Key = "Panel_RatDance", Label = "Rat dance", Id = 127125641136948},
     {Key = "Panel_67", Label = "67", Id = 116953174985407},
 }
-
 local activeEmoteTrack = nil
 local activeEmoteAnimation = nil
 local registerPanelEmotes
 local playPanelEmote
-
 local emoteHeader = createSectionHeader("ANIMATIONS / EMOTES")
 emoteHeader.LayoutOrder = localButtonCount
 for _, emote in ipairs(PANEL_EMOTES) do
@@ -661,18 +609,14 @@ for _, emote in ipairs(PANEL_EMOTES) do
         safeCall("emote button " .. emote.Label, playPanelEmote, emote)
     end))
 end
-
 local function updateLocalCanvas()
     local contentHeight = localLayout.AbsoluteContentSize.Y + 16
     localScroll.CanvasSize = UDim2.fromOffset(0, contentHeight)
 end
-
 addConnection(localLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateLocalCanvas))
 updateLocalCanvas()
-
 local TELEPORT_COOLDOWN = 0.1
 local lastTeleportAt = -math.huge
-
 local function consumeTeleportCooldown()
     local now = os.clock()
     if now - lastTeleportAt < TELEPORT_COOLDOWN then
@@ -681,7 +625,6 @@ local function consumeTeleportCooldown()
     lastTeleportAt = now
     return true
 end
-
 local playerTPFrame = Instance.new("Frame")
 playerTPFrame.Name = "PlayerTPPanel"
 playerTPFrame.Size = UDim2.fromOffset(CONFIG.UI.PlayerTPSize.X, CONFIG.UI.PlayerTPSize.Y)
@@ -691,10 +634,8 @@ playerTPFrame.BorderSizePixel = 0
 playerTPFrame.Visible = false
 playerTPFrame.ZIndex = 850
 playerTPFrame.Parent = gui
-
 addCorner(playerTPFrame, CONFIG.UI.CornerRadius)
 applySciFiSurface(playerTPFrame)
-
 local playerTPTitle = Instance.new("TextLabel")
 playerTPTitle.Name = "Title"
 playerTPTitle.Size = UDim2.new(1, -20, 0, 34)
@@ -707,7 +648,6 @@ playerTPTitle.Font = Enum.Font.GothamBold
 playerTPTitle.TextXAlignment = Enum.TextXAlignment.Left
 playerTPTitle.ZIndex = 851
 playerTPTitle.Parent = playerTPFrame
-
 local playerTPScroll = Instance.new("ScrollingFrame")
 playerTPScroll.Name = "Scroll"
 playerTPScroll.Size = UDim2.new(1, -16, 1, -50)
@@ -718,21 +658,17 @@ playerTPScroll.ScrollBarThickness = 5
 playerTPScroll.CanvasSize = UDim2.fromOffset(0, 0)
 playerTPScroll.ZIndex = 851
 playerTPScroll.Parent = playerTPFrame
-
 local playerTPLayout = Instance.new("UIListLayout")
 playerTPLayout.Padding = UDim.new(0, 6)
 playerTPLayout.SortOrder = Enum.SortOrder.LayoutOrder
 playerTPLayout.Parent = playerTPScroll
-
 addPadding(playerTPScroll, 4, 4, 4, 8)
-
 local PANEL_OPEN_INFO = TweenInfo.new(0.45, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local PANEL_CLOSE_INFO = TweenInfo.new(0.40, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
 local panelAppearance = {}
 local panelTweens = {}
 local panelTargetVisibility = {}
 local panelGeneration = {}
-
 local function capturePanelAppearance(panel)
     panelAppearance[panel] = panelAppearance[panel] or {Size = panel.Size, Properties = {}}
     local cache = panelAppearance[panel].Properties
@@ -762,7 +698,6 @@ local function capturePanelAppearance(panel)
         capture(descendant)
     end
 end
-
 local function cancelPanelTweens(panel)
     local active = panelTweens[panel]
     if active then
@@ -774,7 +709,6 @@ local function cancelPanelTweens(panel)
     end
     panelTweens[panel] = {}
 end
-
 local function setPanelTransparency(panel, transparency)
     capturePanelAppearance(panel)
     for instance, originals in pairs(panelAppearance[panel].Properties) do
@@ -791,7 +725,6 @@ local function setPanelTransparency(panel, transparency)
         end
     end
 end
-
 local function animatePanel(panel, shouldShow)
     if not panel or not panel.Parent then
         return
@@ -842,7 +775,6 @@ local function animatePanel(panel, shouldShow)
         end
     end)
 end
-
 local function togglePanel(panel)
     local showing = panelTargetVisibility[panel]
     if showing == nil then
@@ -850,11 +782,9 @@ local function togglePanel(panel)
     end
     animatePanel(panel, not showing)
 end
-
 local guiVisible = true
 local localWasVisibleBeforeGuiHide = false
 local playerTPWasVisibleBeforeGuiHide = false
-
 local function toggleGuiVisibility()
     if guiVisible then
         guiVisible = false
@@ -884,13 +814,11 @@ local function toggleGuiVisibility()
         end
     end
 end
-
 local function getCharacterParts()
     Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     Humanoid = Character:FindFirstChildOfClass("Humanoid")
     HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
 end
-
 local function isCharacterReady()
     return Character
         and Character.Parent
@@ -899,7 +827,6 @@ local function isCharacterReady()
         and HumanoidRootPart
         and HumanoidRootPart.Parent
 end
-
 registerPanelEmotes = function(emote)
     if not Humanoid or not Humanoid.Parent then
         return nil
@@ -927,7 +854,6 @@ registerPanelEmotes = function(emote)
     end
     return nil
 end
-
 playPanelEmote = function(emote)
     if not isCharacterReady() then
         return
@@ -976,7 +902,6 @@ playPanelEmote = function(emote)
     track.Priority = Enum.AnimationPriority.Action
     track:Play(0.15, 1, 1)
 end
-
 local function snapshotGameMovementValues()
     if not isCharacterReady() then
         return
@@ -985,7 +910,6 @@ local function snapshotGameMovementValues()
     gameJumpPower = Humanoid.JumpPower
     gameUseJumpPower = Humanoid.UseJumpPower
 end
-
 local function applyWalkSpeed()
     if not isCharacterReady() then
         return
@@ -996,7 +920,6 @@ local function applyWalkSpeed()
         Humanoid.WalkSpeed = gameWalkSpeed
     end
 end
-
 local function setWalkSpeed(value)
     value = tonumber(value)
     if not value then
@@ -1008,7 +931,6 @@ local function setWalkSpeed(value)
     walkSpeedInput.Text = tostring(value)
     applyWalkSpeed()
 end
-
 local function applyJumpPower()
     if not isCharacterReady() then
         return
@@ -1021,7 +943,6 @@ local function applyJumpPower()
         Humanoid.JumpPower = gameJumpPower
     end
 end
-
 local function setJumpPower(value)
     value = tonumber(value)
     if not value then
@@ -1033,7 +954,6 @@ local function setJumpPower(value)
     jumpPowerInput.Text = tostring(value)
     applyJumpPower()
 end
-
 local function setFlySpeed(value)
     value = tonumber(value)
     if not value then
@@ -1044,19 +964,15 @@ local function setFlySpeed(value)
     state.FlySpeed = value
     flySpeedInput.Text = tostring(value)
 end
-
 addConnection(walkSpeedInput.FocusLost:Connect(function()
     safeCall("WalkSpeed input", setWalkSpeed, walkSpeedInput.Text)
 end))
-
 addConnection(jumpPowerInput.FocusLost:Connect(function()
     safeCall("JumpPower input", setJumpPower, jumpPowerInput.Text)
 end))
-
 addConnection(flySpeedInput.FocusLost:Connect(function()
     safeCall("FlySpeed input", setFlySpeed, flySpeedInput.Text)
 end))
-
 addConnection(walkSpeedToggle.MouseButton1Click:Connect(function()
     safeCall("toggle WalkSpeed", function()
         state.WalkSpeedEnabled = not state.WalkSpeedEnabled
@@ -1064,7 +980,6 @@ addConnection(walkSpeedToggle.MouseButton1Click:Connect(function()
         applyWalkSpeed()
     end)
 end))
-
 addConnection(jumpPowerToggle.MouseButton1Click:Connect(function()
     safeCall("toggle JumpPower", function()
         state.JumpPowerEnabled = not state.JumpPowerEnabled
@@ -1072,12 +987,10 @@ addConnection(jumpPowerToggle.MouseButton1Click:Connect(function()
         applyJumpPower()
     end)
 end))
-
 local function setInfiniteJump(enabled)
     state.InfiniteJump = enabled
     setButtonState(infiniteJumpButton, enabled, "Inf. Jump: " .. (enabled and "ON" or "OFF"))
 end
-
 addConnection(UserInputService.JumpRequest:Connect(function()
     if not state.InfiniteJump or not isCharacterReady() then
         return
@@ -1086,26 +999,20 @@ addConnection(UserInputService.JumpRequest:Connect(function()
         Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end)
 end))
-
 addConnection(infiniteJumpButton.MouseButton1Click:Connect(function()
     setInfiniteJump(not state.InfiniteJump)
 end))
-
 local lastBhopTime = 0
-
 local function setBhop(enabled)
     state.Bhop = enabled
     setButtonState(bhopButton, enabled, "Bhop: " .. (enabled and "ON" or "OFF"))
 end
-
 addConnection(bhopButton.MouseButton1Click:Connect(function()
     safeCall("toggle Bhop", function()
         setBhop(not state.Bhop)
     end)
 end))
-
 local noclipOriginal = {}
-
 local function applyNoclipToCharacter()
     if not isCharacterReady() then
         return
@@ -1119,7 +1026,6 @@ local function applyNoclipToCharacter()
         end
     end
 end
-
 local function stopNoclip()
     for instance, originalValue in pairs(noclipOriginal) do
         if instance and instance.Parent then
@@ -1128,7 +1034,6 @@ local function stopNoclip()
     end
     table.clear(noclipOriginal)
 end
-
 local function setNoclip(enabled)
     state.Noclip = enabled
     if enabled then
@@ -1138,13 +1043,11 @@ local function setNoclip(enabled)
     end
     setButtonState(noclipButton, enabled, "Noclip: " .. (enabled and "ON" or "OFF"))
 end
-
 addConnection(noclipButton.MouseButton1Click:Connect(function()
     safeCall("toggle Noclip", function()
         setNoclip(not state.Noclip)
     end)
 end))
-
 local flyAttachment
 local flyVelocity
 local flyOrientation
@@ -1152,7 +1055,6 @@ local flyOldAutoRotate
 local flyOldPlatformStand
 local flyControllerRoot
 local flyVehicleMode = false
-
 local function getVehicleControllerRoot()
     if not Humanoid or not Humanoid.Parent then
         return nil
@@ -1173,7 +1075,6 @@ local function getVehicleControllerRoot()
     end
     return root
 end
-
 local function destroyFlyControllers()
     if flyVelocity then
         safeCall("destroy fly velocity", function()
@@ -1196,7 +1097,6 @@ local function destroyFlyControllers()
     flyControllerRoot = nil
     flyVehicleMode = false
 end
-
 local function createFlyControllers(root, vehicleMode)
     if not root or not root.Parent then
         return false
@@ -1228,7 +1128,6 @@ local function createFlyControllers(root, vehicleMode)
     flyOrientation.Parent = root
     return true
 end
-
 local function stopFlying()
     state.Flying = false
     destroyFlyControllers()
@@ -1249,7 +1148,6 @@ local function stopFlying()
     flyOldPlatformStand = nil
     setButtonState(flyButton, false, "Flying: OFF")
 end
-
 local function startFlying()
     if not isCharacterReady() then
         return
@@ -1294,7 +1192,6 @@ local function startFlying()
     end
     setButtonState(flyButton, true, "Flying: ON")
 end
-
 local function updateFlyControllerMode()
     if not state.Flying or not isCharacterReady() then
         return
@@ -1319,7 +1216,6 @@ local function updateFlyControllerMode()
         end
     end
 end
-
 local function updateFly()
     if not state.Flying then
         return
@@ -1380,7 +1276,6 @@ local function updateFly()
         end)
     end
 end
-
 addConnection(flyButton.MouseButton1Click:Connect(function()
     safeCall("toggle Fly", function()
         if state.Flying then
@@ -1390,17 +1285,11 @@ addConnection(flyButton.MouseButton1Click:Connect(function()
         end
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- FULL BRIGHT
-
 ------------------------------------------------------------------
-
 local originalLighting
-
 local lastFullBrightUpdate = 0
-
 local function startFullBright()
     if originalLighting then
         return
@@ -1414,7 +1303,6 @@ local function startFullBright()
     }
     setButtonState(fullBrightButton, true, "FullBright: ON")
 end
-
 local function stopFullBright()
     if not originalLighting then
         return
@@ -1429,7 +1317,6 @@ local function stopFullBright()
     originalLighting = nil
     setButtonState(fullBrightButton, false, "FullBright: OFF")
 end
-
 local function updateFullBright()
     if not state.FullBright then
         return
@@ -1444,7 +1331,6 @@ local function updateFullBright()
     Lighting.Ambient = Color3.new(1, 1, 1)
     Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
 end
-
 local function setFullBright(enabled)
     state.FullBright = enabled
     if enabled then
@@ -1453,31 +1339,20 @@ local function setFullBright(enabled)
         stopFullBright()
     end
 end
-
 addConnection(fullBrightButton.MouseButton1Click:Connect(function()
     safeCall("toggle FullBright", function()
         setFullBright(not state.FullBright)
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- HIGHLIGHT SYSTEM
-
 ------------------------------------------------------------------
-
 local highlightFolder = Instance.new("Folder")
-
 highlightFolder.Name = "MegaPanelV13_Highlights"
-
 highlightFolder.Parent = workspace
-
 local highlights = {}
-
 local lastHighlightRefresh = 0
-
 local lastHighlightInfoRefresh = 0
-
 local function getTargetPart(player)
     local character = player.Character
     if not character then
@@ -1487,7 +1362,6 @@ local function getTargetPart(player)
         or character:FindFirstChild("Head")
         or character:FindFirstChild("HumanoidRootPart")
 end
-
 local function getTargetHumanoid(player)
     local character = player.Character
     if not character then
@@ -1495,20 +1369,17 @@ local function getTargetHumanoid(player)
     end
     return character:FindFirstChildOfClass("Humanoid")
 end
-
 local function isAlive(player)
     local targetPart = getTargetPart(player)
     local humanoid = getTargetHumanoid(player)
     return humanoid ~= nil and humanoid.Health > 0 and targetPart ~= nil
 end
-
 local function isTeammate(player)
     if LocalPlayer.Team == nil then
         return false
     end
     return player.Team == LocalPlayer.Team
 end
-
 local function getHighlightColor(player)
     if player == state.CurrentTarget then
         return CONFIG.UI.Yellow
@@ -1518,7 +1389,6 @@ local function getHighlightColor(player)
     end
     return CONFIG.UI.Red
 end
-
 local function getOrCreateInfoGui(player, character)
     local info = highlights[player]
     if not info then
@@ -1563,7 +1433,6 @@ local function getOrCreateInfoGui(player, character)
     info.billboard.Enabled = state.Highlight
     return info
 end
-
 local function updatePlayerInfo(player)
     if player == LocalPlayer then
         return
@@ -1597,7 +1466,6 @@ local function updatePlayerInfo(player)
         info.billboard.Enabled = state.Highlight
     end
 end
-
 local function createOrUpdateHighlight(player)
     if player == LocalPlayer then
         return
@@ -1645,7 +1513,6 @@ local function createOrUpdateHighlight(player)
     getOrCreateInfoGui(player, character)
     updatePlayerInfo(player)
 end
-
 local function removeHighlight(player)
     local info = highlights[player]
     if not info then
@@ -1663,7 +1530,6 @@ local function removeHighlight(player)
     end
     highlights[player] = nil
 end
-
 local function refreshHighlights(force)
     if not state.Highlight then
         return
@@ -1691,7 +1557,6 @@ local function refreshHighlights(force)
         end
     end
 end
-
 local function updateHighlightInfo(force)
     if not state.Highlight then
         return
@@ -1705,7 +1570,6 @@ local function updateHighlightInfo(force)
         safeCall("update highlight info for " .. player.Name, updatePlayerInfo, player)
     end
 end
-
 local function setHighlight(enabled)
     state.Highlight = enabled
     if enabled then
@@ -1726,19 +1590,14 @@ local function setHighlight(enabled)
     end
     setButtonState(highlightButton, enabled, "Highlight: " .. (enabled and "ON" or "OFF"))
 end
-
 addConnection(highlightButton.MouseButton1Click:Connect(function()
     safeCall("toggle Highlight", function()
         setHighlight(not state.Highlight)
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- PLAYER EVENTS FOR HIGHLIGHTS
-
 ------------------------------------------------------------------
-
 local function hookPlayerHighlightEvents(player)
     if player == LocalPlayer then
         return
@@ -1756,27 +1615,20 @@ local function hookPlayerHighlightEvents(player)
         end
     end))
 end
-
 addConnection(Players.PlayerAdded:Connect(function(player)
     hookPlayerHighlightEvents(player)
     task.defer(updateLocalCanvas)
 end))
-
 addConnection(Players.PlayerRemoving:Connect(function(player)
     removeHighlight(player)
     task.defer(updateLocalCanvas)
 end))
-
 for _, player in ipairs(Players:GetPlayers()) do
     hookPlayerHighlightEvents(player)
 end
-
 ------------------------------------------------------------------
-
 -- AIMBOT TARGET LIST
-
 ------------------------------------------------------------------
-
 local function isValidAimbotTarget(player)
     if player == nil or player == LocalPlayer then
         return false
@@ -1800,7 +1652,6 @@ local function isValidAimbotTarget(player)
     -- Different Team = opponent.
     return true
 end
-
 local function getValidTargets()
     local targets = {}
     if not isCharacterReady() then
@@ -1823,7 +1674,6 @@ local function getValidTargets()
     end)
     return targets
 end
-
 local function setCurrentTarget(player)
     if player and not isValidAimbotTarget(player) then
         player = nil
@@ -1840,7 +1690,6 @@ local function setCurrentTarget(player)
         refreshHighlights(true)
     end
 end
-
 local function chooseTarget()
     local targets = getValidTargets()
     if #targets == 0 then
@@ -1853,7 +1702,6 @@ local function chooseTarget()
     end
     setCurrentTarget(targets[state.TargetIndex])
 end
-
 local function nextTarget()
     local targets = getValidTargets()
     if #targets == 0 then
@@ -1879,13 +1727,9 @@ local function nextTarget()
     state.TargetIndex = currentPosition
     setCurrentTarget(targets[currentPosition])
 end
-
 ------------------------------------------------------------------
-
 -- AIMBOT
-
 ------------------------------------------------------------------
-
 local function setAimbot(enabled)
     state.Aimbot = enabled
     if enabled then
@@ -1900,7 +1744,6 @@ local function setAimbot(enabled)
         "Aimbot: " .. (enabled and "ON" or "OFF")
     )
 end
-
 local function updateAimbot(deltaTime)
     if not state.Aimbot or not isCharacterReady() then
         return
@@ -1936,19 +1779,14 @@ local function updateAimbot(deltaTime)
     local alpha = 1 - math.pow(1 - baseAlpha, dt * 60)
     camera.CFrame = camera.CFrame:Lerp(desired, alpha)
 end
-
 addConnection(aimbotButton.MouseButton1Click:Connect(function()
     safeCall("toggle Aimbot", function()
         setAimbot(not state.Aimbot)
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- PLAYER TP
-
 ------------------------------------------------------------------
-
 local function createPlayerTPButton(player)
     if player == LocalPlayer then
         return
@@ -1995,7 +1833,6 @@ local function createPlayerTPButton(player)
         end)
     end))
 end
-
 local function updatePlayerTPList()
     for _, child in ipairs(playerTPScroll:GetChildren()) do
         if child:IsA("TextButton") then
@@ -2007,37 +1844,26 @@ local function updatePlayerTPList()
     end
     playerTPScroll.CanvasSize = UDim2.fromOffset(0, playerTPLayout.AbsoluteContentSize.Y + 16)
 end
-
 addConnection(playerTPLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     playerTPScroll.CanvasSize = UDim2.fromOffset(0, playerTPLayout.AbsoluteContentSize.Y + 16)
 end))
-
 addConnection(Players.PlayerAdded:Connect(function()
     task.defer(updatePlayerTPList)
 end))
-
 addConnection(Players.PlayerRemoving:Connect(function()
     task.defer(updatePlayerTPList)
 end))
-
 updatePlayerTPList()
-
 addConnection(playerTPButton.MouseButton1Click:Connect(function()
     togglePanel(playerTPFrame)
 end))
-
 addConnection(localPlayerButton.MouseButton1Click:Connect(function()
     togglePanel(localFrame)
 end))
-
 ------------------------------------------------------------------
-
 -- CLICK TP
-
 ------------------------------------------------------------------
-
 local mouse = LocalPlayer:GetMouse()
-
 local function mouseIsOverOurGui()
     local guiObjects = PlayerGui:GetGuiObjectsAtPosition(mouse.X, mouse.Y)
     for _, object in ipairs(guiObjects) do
@@ -2047,7 +1873,6 @@ local function mouseIsOverOurGui()
     end
     return false
 end
-
 local function doClickTP()
     if not state.ClickTP or not isCharacterReady() then
         return
@@ -2062,30 +1887,22 @@ local function doClickTP()
         HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0))
     end)
 end
-
 addConnection(mouse.Button1Down:Connect(function()
     doClickTP()
 end))
-
 local function setClickTP(enabled)
     state.ClickTP = enabled
     setButtonState(clickTPButton, enabled, "Click TP: " .. (enabled and "ON" or "OFF"))
 end
-
 addConnection(clickTPButton.MouseButton1Click:Connect(function()
     safeCall("toggle Click TP", function()
         setClickTP(not state.ClickTP)
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- ANTI AFK
-
 ------------------------------------------------------------------
-
 local antiAFKConnection
-
 local function stopAntiAFK()
     state.AntiAFK = false
     if antiAFKConnection then
@@ -2094,7 +1911,6 @@ local function stopAntiAFK()
     end
     setButtonState(antiAFKButton, false, "AntiAFK: OFF")
 end
-
 local function startAntiAFK()
     if antiAFKConnection then
         antiAFKConnection:Disconnect()
@@ -2113,7 +1929,6 @@ local function startAntiAFK()
     addConnection(antiAFKConnection)
     setButtonState(antiAFKButton, true, "AntiAFK: ON")
 end
-
 local function setAntiAFK(enabled)
     if enabled then
         startAntiAFK()
@@ -2121,19 +1936,14 @@ local function setAntiAFK(enabled)
         stopAntiAFK()
     end
 end
-
 addConnection(antiAFKButton.MouseButton1Click:Connect(function()
     safeCall("toggle AntiAFK", function()
         setAntiAFK(not state.AntiAFK)
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- DRAGGING
-
 ------------------------------------------------------------------
-
 local function makeDraggable(handle, target)
     local dragging = false
     local dragStart
@@ -2174,19 +1984,12 @@ local function makeDraggable(handle, target)
         )
     end))
 end
-
 makeDraggable(title, mainFrame)
-
 makeDraggable(localTitle, localFrame)
-
 makeDraggable(playerTPTitle, playerTPFrame)
-
 ------------------------------------------------------------------
-
 -- MOVEMENT WATCHERS
-
 ------------------------------------------------------------------
-
 local function setupMovementWatchers()
     if not Humanoid then
         return
@@ -2210,13 +2013,9 @@ local function setupMovementWatchers()
     addConnection(walkSpeedChangedConnection)
     addConnection(jumpPowerChangedConnection)
 end
-
 ------------------------------------------------------------------
-
 -- CHARACTER SETUP
-
 ------------------------------------------------------------------
-
 local function setupCharacter(newCharacter)
     Character = newCharacter
     Humanoid = Character:WaitForChild("Humanoid")
@@ -2255,7 +2054,6 @@ local function setupCharacter(newCharacter)
         end
     end)
 end
-
 addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     safeCall("CharacterAdded setup", function()
         local shouldFlyAgain = state.Flying
@@ -2280,21 +2078,13 @@ addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
         end
     end)
 end))
-
 ------------------------------------------------------------------
-
 -- GLOBAL RENDER STEP
-
 ------------------------------------------------------------------
-
 local lastNoclipUpdate = 0
-
 local fpsFrames = 0
-
 local fpsTimer = 0
-
 local pingTimer = 0
-
 RunService:BindToRenderStep(
     "MegaPanelV13_Render",
     Enum.RenderPriority.Camera.Value + 1,
@@ -2375,13 +2165,9 @@ RunService:BindToRenderStep(
         end
     end
 )
-
 ------------------------------------------------------------------
-
 -- KEYBOARD ACTIONS
-
 ------------------------------------------------------------------
-
 local function bindKey(actionName, keyCode, callback)
     if not keyCode then
         return
@@ -2408,11 +2194,9 @@ local function bindKey(actionName, keyCode, callback)
         keyCode
     )
 end
-
 bindKey("MegaPanelV13_ToggleGui", CONFIG.FeatureKeys.ToggleGui, function()
     toggleGuiVisibility()
 end)
-
 bindKey("MegaPanelV13_Fly", CONFIG.FeatureKeys.Fly, function()
     if state.Flying then
         stopFlying()
@@ -2420,109 +2204,69 @@ bindKey("MegaPanelV13_Fly", CONFIG.FeatureKeys.Fly, function()
         startFlying()
     end
 end)
-
 bindKey("MegaPanelV13_InfiniteJump", CONFIG.FeatureKeys.InfiniteJump, function()
     setInfiniteJump(not state.InfiniteJump)
 end)
-
 bindKey("MegaPanelV13_Noclip", CONFIG.FeatureKeys.Noclip, function()
     setNoclip(not state.Noclip)
 end)
-
 bindKey("MegaPanelV13_Bhop", CONFIG.FeatureKeys.Bhop, function()
     setBhop(not state.Bhop)
 end)
-
 bindKey("MegaPanelV13_Aimbot", CONFIG.FeatureKeys.Aimbot, function()
     setAimbot(not state.Aimbot)
 end)
-
 bindKey("MegaPanelV13_NextTarget", CONFIG.FeatureKeys.NextTarget, function()
     if state.Aimbot then
         nextTarget()
     end
 end)
-
 bindKey("MegaPanelV13_Highlight", CONFIG.FeatureKeys.Highlight, function()
     setHighlight(not state.Highlight)
 end)
-
 bindKey("MegaPanelV13_AntiAFK", CONFIG.FeatureKeys.AntiAFK, function()
     setAntiAFK(not state.AntiAFK)
 end)
-
 bindKey("MegaPanelV13_FullBright", CONFIG.FeatureKeys.FullBright, function()
     setFullBright(not state.FullBright)
 end)
-
 bindKey("MegaPanelV13_ClickTP", CONFIG.FeatureKeys.ClickTP, function()
     setClickTP(not state.ClickTP)
 end)
-
 bindKey("MegaPanelV13_PlayerTP", CONFIG.FeatureKeys.PlayerTP, function()
     togglePanel(playerTPFrame)
 end)
-
 bindKey("MegaPanelV13_LocalPlayer", CONFIG.FeatureKeys.LocalPlayer, function()
     togglePanel(localFrame)
 end)
-
 ------------------------------------------------------------------
-
 -- INITIAL CHARACTER
-
 ------------------------------------------------------------------
-
 getCharacterParts()
-
 snapshotGameMovementValues()
-
 setupCharacter(Character)
-
 setupMovementWatchers()
-
 ------------------------------------------------------------------
-
 -- INITIAL HIGHLIGHTS
-
 ------------------------------------------------------------------
-
 safeCall("initial highlight refresh", refreshHighlights)
-
 ------------------------------------------------------------------
-
 -- INITIAL UI STATES
-
 ------------------------------------------------------------------
-
 setButtonState(infiniteJumpButton, state.InfiniteJump, "Inf. Jump: " .. (state.InfiniteJump and "ON" or "OFF"))
-
 setButtonState(flyButton, state.Flying, "Flying: " .. (state.Flying and "ON" or "OFF"))
-
 setButtonState(aimbotButton, state.Aimbot, "Aimbot: " .. (state.Aimbot and "ON" or "OFF"))
-
 setButtonState(noclipButton, state.Noclip, "Noclip: " .. (state.Noclip and "ON" or "OFF"))
-
 setButtonState(bhopButton, state.Bhop, "Bhop: " .. (state.Bhop and "ON" or "OFF"))
-
 setButtonState(highlightButton, state.Highlight, "Highlight: " .. (state.Highlight and "ON" or "OFF"))
-
 setButtonState(walkSpeedToggle, state.WalkSpeedEnabled, "WalkSpeed: " .. (state.WalkSpeedEnabled and "ON" or "OFF"))
-
 setButtonState(jumpPowerToggle, state.JumpPowerEnabled, "JumpPower: " .. (state.JumpPowerEnabled and "ON" or "OFF"))
-
 setButtonState(antiAFKButton, state.AntiAFK, "AntiAFK: " .. (state.AntiAFK and "ON" or "OFF"))
-
 setButtonState(clickTPButton, state.ClickTP, "Click TP: " .. (state.ClickTP and "ON" or "OFF"))
-
 setButtonState(fullBrightButton, state.FullBright, "FullBright: " .. (state.FullBright and "ON" or "OFF"))
-
 ------------------------------------------------------------------
-
 -- CLOSE / CLEANUP
-
 ------------------------------------------------------------------
-
 local function cleanup()
     if destroyed then
         return
@@ -2590,7 +2334,6 @@ local function cleanup()
         end)
     end
 end
-
 addConnection(closeButton.MouseButton1Click:Connect(function()
     guiVisible = false
     animatePanel(mainFrame, false)
@@ -2602,21 +2345,12 @@ addConnection(closeButton.MouseButton1Click:Connect(function()
     end
     task.delay(0.42, cleanup)
 end))
-
 ------------------------------------------------------------------
-
 -- FINAL
-
 ------------------------------------------------------------------
-
 print("[MegaPanel V14 Cosmic] loaded successfully.")
-
 print("[MegaPanel V14 Cosmic] F1 = GUI")
-
 print("[MegaPanel V14 Cosmic] X = Aimbot")
-
 print("[MegaPanel V14 Cosmic] C = Next Target")
-
 print("[MegaPanel V14 Cosmic] H = Highlight")
-
 print("[MegaPanel V14 Cosmic] K = AntiAFK")
