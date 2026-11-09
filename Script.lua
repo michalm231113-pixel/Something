@@ -126,6 +126,7 @@ local humanoidDiedConnection
 local walkSpeedChangedConnection
 local jumpPowerChangedConnection
 local Connections = {}
+local PlayerConnections = {}
 local ActionNames = {}
 local destroyed = false
 local function addConnection(connection)
@@ -135,15 +136,55 @@ local function addConnection(connection)
     return connection
 end
 local function disconnectConnection(connection)
-    if connection and connection.Connected then
+    if not connection then
+        return
+    end
+
+    if connection.Connected then
         connection:Disconnect()
     end
+
+    for index = #Connections, 1, -1 do
+        if Connections[index] == connection then
+            table.remove(Connections, index)
+        end
+    end
+end
+local function addPlayerConnection(player, connection)
+    if not player or not connection then
+        return connection
+    end
+
+    local playerList = PlayerConnections[player]
+    if not playerList then
+        playerList = {}
+        PlayerConnections[player] = playerList
+    end
+
+    table.insert(playerList, connection)
+    return addConnection(connection)
+end
+local function disconnectPlayerConnections(player)
+    local playerList = PlayerConnections[player]
+    if not playerList then
+        return
+    end
+
+    for index = #playerList, 1, -1 do
+        disconnectConnection(playerList[index])
+    end
+
+    PlayerConnections[player] = nil
 end
 local function cleanupConnections()
-    for _, connection in ipairs(Connections) do
-        disconnectConnection(connection)
+    while #Connections > 0 do
+        local connection = table.remove(Connections)
+        if connection and connection.Connected then
+            connection:Disconnect()
+        end
     end
-    table.clear(Connections)
+
+    table.clear(PlayerConnections)
 end
 local existingGui = PlayerGui:FindFirstChild("MegaPanelV13")
 if existingGui then
@@ -1589,14 +1630,14 @@ local function hookPlayerHighlightEvents(player)
     if player == LocalPlayer then
         return
     end
-    addConnection(player.CharacterAdded:Connect(function()
+    addPlayerConnection(player, player.CharacterAdded:Connect(function()
         task.defer(function()
             if state.Highlight then
                 safeCall("character highlight rebuild", refreshHighlights, true)
             end
         end)
     end))
-    addConnection(player:GetPropertyChangedSignal("Team"):Connect(function()
+    addPlayerConnection(player, player:GetPropertyChangedSignal("Team"):Connect(function()
         if state.Highlight then
             safeCall("team highlight refresh", refreshHighlights, true)
         end
@@ -1607,6 +1648,7 @@ addConnection(Players.PlayerAdded:Connect(function(player)
     task.defer(updateLocalCanvas)
 end))
 addConnection(Players.PlayerRemoving:Connect(function(player)
+    disconnectPlayerConnections(player)
     removeHighlight(player)
     task.defer(updateLocalCanvas)
 end))
@@ -1870,14 +1912,14 @@ local antiAFKConnection
 local function stopAntiAFK()
     state.AntiAFK = false
     if antiAFKConnection then
-        antiAFKConnection:Disconnect()
+        disconnectConnection(antiAFKConnection)
         antiAFKConnection = nil
     end
     setButtonState(antiAFKButton, false, "AntiAFK: OFF")
 end
 local function startAntiAFK()
     if antiAFKConnection then
-        antiAFKConnection:Disconnect()
+        disconnectConnection(antiAFKConnection)
         antiAFKConnection = nil
     end
     state.AntiAFK = true
@@ -1953,10 +1995,10 @@ local function setupMovementWatchers()
         return
     end
     if walkSpeedChangedConnection then
-        walkSpeedChangedConnection:Disconnect()
+        disconnectConnection(walkSpeedChangedConnection)
     end
     if jumpPowerChangedConnection then
-        jumpPowerChangedConnection:Disconnect()
+        disconnectConnection(jumpPowerChangedConnection)
     end
     walkSpeedChangedConnection = Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if not state.WalkSpeedEnabled and Humanoid and Humanoid.Parent then
@@ -1993,7 +2035,7 @@ local function setupCharacter(newCharacter)
         applyNoclipToCharacter()
     end
     if humanoidDiedConnection then
-        humanoidDiedConnection:Disconnect()
+        disconnectConnection(humanoidDiedConnection)
     end
     humanoidDiedConnection = Humanoid.Died:Connect(function()
         if state.Flying then
