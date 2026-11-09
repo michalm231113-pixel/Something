@@ -76,12 +76,11 @@ local CONFIG = {
     },
     FeatureKeys = {
         ToggleGui = Enum.KeyCode.F1,
-        Shutdown = Enum.KeyCode.X,
         Fly = Enum.KeyCode.F,
         InfiniteJump = Enum.KeyCode.Z,
         Noclip = Enum.KeyCode.T,
         Bhop = Enum.KeyCode.B,
-        Aimbot = nil,
+        Aimbot = Enum.KeyCode.X,
         NextTarget = Enum.KeyCode.C,
         Highlight = Enum.KeyCode.H,
         AntiAFK = Enum.KeyCode.K,
@@ -2247,9 +2246,6 @@ local function cleanup()
         end)
     end
 end
-bindKey("MegaPanelV13_Shutdown", CONFIG.FeatureKeys.Shutdown, function()
-    cleanup()
-end)
 addConnection(closeButton.MouseButton1Click:Connect(function()
     guiVisible = false
     animatePanel(mainFrame, false)
@@ -2263,7 +2259,7 @@ addConnection(closeButton.MouseButton1Click:Connect(function()
 end))
 print("[MegaPanel V14 Cosmic] loaded successfully.")
 print("[MegaPanel V14 Cosmic] F1 = GUI")
-print("[MegaPanel V14 Cosmic] X = Shutdown script + GUI")
+print("[MegaPanel V14 Cosmic] X = Aimbot")
 print("[MegaPanel V14 Cosmic] C = Next Target")
 print("[MegaPanel V14 Cosmic] H = Highlight")
 print("[MegaPanel V14 Cosmic] K = AntiAFK")
