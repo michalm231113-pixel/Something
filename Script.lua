@@ -587,15 +587,9 @@ pingLabel.TextXAlignment = Enum.TextXAlignment.Right
 pingLabel.ZIndex = 903
 pingLabel.Parent = performanceFrame
 local PANEL_EMOTES = {
-    {Key = "Panel_Lay", Label = "Leżenie", Id = 104104787736608},
     {Key = "Panel_TakeTheL", Label = "Elka / Take The L", Id = 134447491925889},
     {Key = "Panel_ChillFloat", Label = "Siedzenie w powietrzu", Id = 134795656394655},
-    {Key = "Panel_Floss", Label = "Floss dance", Id = 104284346878900},
     {Key = "Panel_MM2FakeDead", Label = "MM2 Fake Dead", Id = 75954983685501},
-    {Key = "Panel_NyanCat", Label = "Nyan Cat", Id = 109073518888589},
-    {Key = "Panel_Flex", Label = "Flex", Id = 113066563928057},
-    {Key = "Panel_RatDance", Label = "Rat dance", Id = 127125641136948},
-    {Key = "Panel_67", Label = "67", Id = 116953174985407},
 }
 local activeEmoteTrack = nil
 local activeEmoteAnimation = nil
