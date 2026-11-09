@@ -599,14 +599,16 @@ local PANEL_EMOTES = {
 }
 local activeEmoteTrack = nil
 local activeEmoteAnimation = nil
+local emoteRequestToken = 0
 local registerPanelEmotes
 local playPanelEmote
 local emoteHeader = createSectionHeader("ANIMATIONS / EMOTES")
 emoteHeader.LayoutOrder = localButtonCount
 for _, emote in ipairs(PANEL_EMOTES) do
-    local button = createLocalButton(emote.Label, nil)
+    local selectedEmote = emote
+    local button = createLocalButton(selectedEmote.Label, nil)
     addConnection(button.MouseButton1Click:Connect(function()
-        safeCall("emote button " .. emote.Label, playPanelEmote, emote)
+        safeCall("emote button " .. selectedEmote.Label, playPanelEmote, selectedEmote)
     end))
 end
 local function updateLocalCanvas()
@@ -856,8 +858,14 @@ registerPanelEmotes = function(emote)
 end
 playPanelEmote = function(emote)
     if not isCharacterReady() then
+        warn("[MegaPanel V14] Cannot play emote; character is not ready.")
         return
     end
+
+    emoteRequestToken += 1
+    local requestToken = emoteRequestToken
+    local requestHumanoid = Humanoid
+
     if activeEmoteTrack then
         pcall(function()
             activeEmoteTrack:Stop(0.12)
@@ -865,42 +873,93 @@ playPanelEmote = function(emote)
         end)
         activeEmoteTrack = nil
     end
+
     if activeEmoteAnimation then
         activeEmoteAnimation:Destroy()
         activeEmoteAnimation = nil
     end
+
     local existingName = registerPanelEmotes(emote)
     if existingName then
         local played = safeCall("play native emote " .. emote.Label, function()
-            return Humanoid:PlayEmoteAsync(existingName)
+            return requestHumanoid:PlayEmoteAsync(existingName)
         end)
         if played == true then
             return
         end
     end
-    local animator = Humanoid:FindFirstChildOfClass("Animator")
+
+    local animator = requestHumanoid:FindFirstChildOfClass("Animator")
     if not animator then
-        animator = Humanoid:WaitForChild("Animator", 3)
+        animator = requestHumanoid:WaitForChild("Animator", 3)
     end
+
     if not animator or not animator:IsA("Animator") or not animator:IsDescendantOf(workspace) then
-        warn("[MegaPanel V13] Animator unavailable; cannot play " .. emote.Label)
+        warn("[MegaPanel V14] Animator unavailable; cannot play " .. emote.Label)
         return
     end
+
     local animation = Instance.new("Animation")
     animation.Name = emote.Key
     animation.AnimationId = "rbxassetid://" .. tostring(emote.Id)
-    local ok, track = pcall(function()
-        return animator:LoadAnimation(animation)
+
+    task.spawn(function()
+        local fetchStatus
+        local preloadOk, preloadError = pcall(function()
+            game:GetService("ContentProvider"):PreloadAsync({animation}, function(_, status)
+                fetchStatus = status
+            end)
+        end)
+
+        if requestToken ~= emoteRequestToken or destroyed
+            or requestHumanoid ~= Humanoid or not requestHumanoid.Parent then
+            animation:Destroy()
+            return
+        end
+
+        if not preloadOk or fetchStatus ~= Enum.AssetFetchStatus.Success then
+            animation:Destroy()
+            local statusText = fetchStatus and fetchStatus.Name or tostring(preloadError or "Unknown")
+            warn(("[MegaPanel V14] Emote '%s' (ID %s) could not be downloaded. Status: %s. Check that the ID is an Animation asset and that this experience has permission to use it.")
+                :format(emote.Label, tostring(emote.Id), statusText))
+            return
+        end
+
+        local loadOk, trackOrError = pcall(function()
+            return animator:LoadAnimation(animation)
+        end)
+
+        if not loadOk or not trackOrError then
+            animation:Destroy()
+            warn(("[MegaPanel V14] Could not create an animation track for '%s' (ID %s): %s")
+                :format(emote.Label, tostring(emote.Id), tostring(trackOrError)))
+            return
+        end
+
+        if requestToken ~= emoteRequestToken or destroyed
+            or requestHumanoid ~= Humanoid or not requestHumanoid.Parent then
+            trackOrError:Destroy()
+            animation:Destroy()
+            return
+        end
+
+        activeEmoteAnimation = animation
+        activeEmoteTrack = trackOrError
+        trackOrError.Priority = Enum.AnimationPriority.Action
+
+        local playOk, playError = pcall(function()
+            trackOrError:Play(0.15, 1, 1)
+        end)
+
+        if not playOk then
+            activeEmoteTrack = nil
+            activeEmoteAnimation = nil
+            trackOrError:Destroy()
+            animation:Destroy()
+            warn(("[MegaPanel V14] Could not play emote '%s' (ID %s): %s")
+                :format(emote.Label, tostring(emote.Id), tostring(playError)))
+        end
     end)
-    if not ok or not track then
-        animation:Destroy()
-        warn("[MegaPanel V13] Roblox denied or failed to load emote: " .. emote.Label)
-        return
-    end
-    activeEmoteAnimation = animation
-    activeEmoteTrack = track
-    track.Priority = Enum.AnimationPriority.Action
-    track:Play(0.15, 1, 1)
 end
 local function snapshotGameMovementValues()
     if not isCharacterReady() then
@@ -2192,6 +2251,7 @@ local function cleanup()
     state.Highlight = false
     state.WalkSpeedEnabled = false
     state.JumpPowerEnabled = false
+    emoteRequestToken += 1
     applyWalkSpeed()
     applyJumpPower()
     if activeEmoteTrack then
