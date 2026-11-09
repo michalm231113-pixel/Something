@@ -196,7 +196,7 @@ local function getKeyDisplay(keyCode)
     if display and display ~= "" then
         return string.upper(display)
     end
-    
+
     local raw = tostring(keyCode):gsub("Enum.KeyCode.", "")
     return string.upper(raw)
 end
@@ -481,8 +481,6 @@ localTitle.TextXAlignment = Enum.TextXAlignment.Left
 localTitle.ZIndex = 901
 localTitle.Parent = localFrame
 
-
-
 local localScroll = Instance.new("ScrollingFrame")
 localScroll.Name = "Scroll"
 localScroll.Size = UDim2.new(1, -16, 1, -52)
@@ -742,8 +740,6 @@ playerTPScroll.ScrollBarThickness = 5
 playerTPScroll.CanvasSize = UDim2.fromOffset(0, 0)
 playerTPScroll.ZIndex = 851
 playerTPScroll.Parent = playerTPFrame
-
-
 
 local playerTPLayout = Instance.new("UIListLayout")
 playerTPLayout.Padding = UDim.new(0, 6)
@@ -1075,7 +1071,7 @@ local function setJumpPower(value)
         jumpPowerInput.Text = tostring(state.JumpPower)
         return
     end
-    
+
     value = math.clamp(value, CONFIG.JumpPower.Min, CONFIG.JumpPower.Max)
     state.JumpPower = value
     jumpPowerInput.Text = tostring(value)
@@ -1230,7 +1226,7 @@ local function getVehicleControllerRoot()
     if root.Anchored then
         return nil
     end
-    
+
     return root
 end
 
@@ -1267,7 +1263,7 @@ local function createFlyControllers(root, vehicleMode)
     if root.Anchored then
         return false
     end
-    
+
     destroyFlyControllers()
 
     flyControllerRoot = root
@@ -1335,7 +1331,7 @@ local function startFlying()
             if not createFlyControllers(vehicleRoot, true) then
                 stopFlying()
             end
-            
+
         elseif not flyVehicleMode and not vehicleRoot and flyControllerRoot ~= HumanoidRootPart then
             if not createFlyControllers(HumanoidRootPart, false) then
                 stopFlying()
@@ -1398,7 +1394,7 @@ local function updateFlyControllerMode()
     else
         if flyVehicleMode then
             destroyFlyControllers()
-            
+
             if Humanoid then
                 Humanoid.AutoRotate = false
                 Humanoid.PlatformStand = true
@@ -1476,11 +1472,7 @@ local function updateFly()
         end
     end)
 
-
-
     local look = camera.CFrame.LookVector
-
-
 
     if look.Magnitude > 0 then
 
@@ -1497,8 +1489,6 @@ local function updateFly()
     end
 
 end
-
-
 
 addConnection(flyButton.MouseButton1Click:Connect(function()
 
@@ -1518,21 +1508,15 @@ addConnection(flyButton.MouseButton1Click:Connect(function()
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- FULL BRIGHT
 
 ------------------------------------------------------------------
 
-
-
 local originalLighting
 
 local lastFullBrightUpdate = 0
-
-
 
 local function startFullBright()
 
@@ -1541,8 +1525,6 @@ local function startFullBright()
         return
 
     end
-
-
 
     originalLighting = {
 
@@ -1558,13 +1540,9 @@ local function startFullBright()
 
     }
 
-
-
     setButtonState(fullBrightButton, true, "FullBright: ON")
 
 end
-
-
 
 local function stopFullBright()
 
@@ -1573,8 +1551,6 @@ local function stopFullBright()
         return
 
     end
-
-
 
     safeCall("restore lighting", function()
 
@@ -1590,15 +1566,11 @@ local function stopFullBright()
 
     end)
 
-
-
     originalLighting = nil
 
     setButtonState(fullBrightButton, false, "FullBright: OFF")
 
 end
-
-
 
 local function updateFullBright()
 
@@ -1608,19 +1580,13 @@ local function updateFullBright()
 
     end
 
-
-
     if os.clock() - lastFullBrightUpdate < CONFIG.FullBright.RefreshInterval then
 
         return
 
     end
 
-
-
     lastFullBrightUpdate = os.clock()
-
-
 
     Lighting.Brightness = 2
 
@@ -1634,13 +1600,9 @@ local function updateFullBright()
 
 end
 
-
-
 local function setFullBright(enabled)
 
     state.FullBright = enabled
-
-
 
     if enabled then
 
@@ -1654,8 +1616,6 @@ local function setFullBright(enabled)
 
 end
 
-
-
 addConnection(fullBrightButton.MouseButton1Click:Connect(function()
 
     safeCall("toggle FullBright", function()
@@ -1666,15 +1626,11 @@ addConnection(fullBrightButton.MouseButton1Click:Connect(function()
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- HIGHLIGHT SYSTEM
 
 ------------------------------------------------------------------
-
-
 
 local highlightFolder = Instance.new("Folder")
 
@@ -1682,29 +1638,21 @@ highlightFolder.Name = "MegaPanelV13_Highlights"
 
 highlightFolder.Parent = workspace
 
-
-
 local highlights = {}
 
 local lastHighlightRefresh = 0
 
 local lastHighlightInfoRefresh = 0
 
-
-
 local function getTargetPart(player)
 
     local character = player.Character
-
-
 
     if not character then
 
         return nil
 
     end
-
-
 
     return character:FindFirstChild(CONFIG.Aimbot.TargetPart)
 
@@ -1713,8 +1661,6 @@ local function getTargetPart(player)
         or character:FindFirstChild("HumanoidRootPart")
 
 end
-
-
 
 local function getTargetHumanoid(player)
 
@@ -1726,13 +1672,9 @@ local function getTargetHumanoid(player)
 
     end
 
-
-
     return character:FindFirstChildOfClass("Humanoid")
 
 end
-
-
 
 local function isAlive(player)
 
@@ -1740,13 +1682,9 @@ local function isAlive(player)
 
     local humanoid = getTargetHumanoid(player)
 
-
-
     return humanoid ~= nil and humanoid.Health > 0 and targetPart ~= nil
 
 end
-
-
 
 local function isTeammate(player)
 
@@ -1756,13 +1694,9 @@ local function isTeammate(player)
 
     end
 
-
-
     return player.Team == LocalPlayer.Team
 
 end
-
-
 
 local function getHighlightColor(player)
 
@@ -1772,21 +1706,15 @@ local function getHighlightColor(player)
 
     end
 
-
-
     if isTeammate(player) then
 
         return CONFIG.UI.Green
 
     end
 
-
-
     return CONFIG.UI.Red
 
 end
-
-
 
 local function getOrCreateInfoGui(player, character)
     local info = highlights[player]
@@ -1935,15 +1863,11 @@ local function removeHighlight(player)
 
     local info = highlights[player]
 
-
-
     if not info then
 
         return
 
     end
-
-
 
     if info.highlight then
 
@@ -1955,8 +1879,6 @@ local function removeHighlight(player)
 
     end
 
-
-
     if info.billboard then
 
         safeCall("remove highlight info", function()
@@ -1967,13 +1889,9 @@ local function removeHighlight(player)
 
     end
 
-
-
     highlights[player] = nil
 
 end
-
-
 
 local function refreshHighlights(force)
     if not state.Highlight then
@@ -2014,11 +1932,7 @@ local function updateHighlightInfo(force)
 
     end
 
-
-
     local now = os.clock()
-
-
 
     if not force and now - lastHighlightInfoRefresh < CONFIG.Highlight.InfoRefreshInterval then
 
@@ -2026,11 +1940,7 @@ local function updateHighlightInfo(force)
 
     end
 
-
-
     lastHighlightInfoRefresh = now
-
-
 
     for player in pairs(highlights) do
 
@@ -2039,8 +1949,6 @@ local function updateHighlightInfo(force)
     end
 
 end
-
-
 
 local function setHighlight(enabled)
     state.Highlight = enabled
@@ -2075,15 +1983,11 @@ addConnection(highlightButton.MouseButton1Click:Connect(function()
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- PLAYER EVENTS FOR HIGHLIGHTS
 
 ------------------------------------------------------------------
-
-
 
 local function hookPlayerHighlightEvents(player)
 
@@ -2092,8 +1996,6 @@ local function hookPlayerHighlightEvents(player)
         return
 
     end
-
-
 
     addConnection(player.CharacterAdded:Connect(function()
 
@@ -2109,8 +2011,6 @@ local function hookPlayerHighlightEvents(player)
 
     end))
 
-
-
     addConnection(player:GetPropertyChangedSignal("Team"):Connect(function()
 
         if state.Highlight then
@@ -2123,8 +2023,6 @@ local function hookPlayerHighlightEvents(player)
 
 end
 
-
-
 addConnection(Players.PlayerAdded:Connect(function(player)
 
     hookPlayerHighlightEvents(player)
@@ -2132,8 +2030,6 @@ addConnection(Players.PlayerAdded:Connect(function(player)
     task.defer(updateLocalCanvas)
 
 end))
-
-
 
 addConnection(Players.PlayerRemoving:Connect(function(player)
 
@@ -2143,23 +2039,17 @@ addConnection(Players.PlayerRemoving:Connect(function(player)
 
 end))
 
-
-
 for _, player in ipairs(Players:GetPlayers()) do
 
     hookPlayerHighlightEvents(player)
 
 end
 
-
-
 ------------------------------------------------------------------
 
 -- AIMBOT TARGET LIST
 
 ------------------------------------------------------------------
-
-
 
 local function isValidAimbotTarget(player)
 
@@ -2169,23 +2059,17 @@ local function isValidAimbotTarget(player)
 
     end
 
-
-
     if not player.Parent then
 
         return false
 
     end
 
-
-
     if not isAlive(player) then
 
         return false
 
     end
-
-
 
     -- FFA:
 
@@ -2197,8 +2081,6 @@ local function isValidAimbotTarget(player)
 
     end
 
-
-
     -- Team mode:
 
     -- Players on the same Team are NEVER valid aimbot targets.
@@ -2209,29 +2091,21 @@ local function isValidAimbotTarget(player)
 
     end
 
-
-
     -- Different Team = opponent.
 
     return true
 
 end
 
-
-
 local function getValidTargets()
 
     local targets = {}
-
-
 
     if not isCharacterReady() then
 
         return targets
 
     end
-
-
 
     for _, player in ipairs(Players:GetPlayers()) do
 
@@ -2243,15 +2117,11 @@ local function getValidTargets()
 
     end
 
-
-
     table.sort(targets, function(a, b)
 
         local aPart = getTargetPart(a)
 
         local bPart = getTargetPart(b)
-
-
 
         if not aPart or not bPart or not HumanoidRootPart then
 
@@ -2259,25 +2129,17 @@ local function getValidTargets()
 
         end
 
-
-
         local aDistance = (aPart.Position - HumanoidRootPart.Position).Magnitude
 
         local bDistance = (bPart.Position - HumanoidRootPart.Position).Magnitude
-
-
 
         return aDistance < bDistance
 
     end)
 
-
-
     return targets
 
 end
-
-
 
 local function setCurrentTarget(player)
 
@@ -2287,11 +2149,7 @@ local function setCurrentTarget(player)
 
     end
 
-
-
     state.CurrentTarget = player
-
-
 
     if player then
 
@@ -2307,8 +2165,6 @@ local function setCurrentTarget(player)
 
     end
 
-
-
     if state.Highlight then
 
         refreshHighlights(true)
@@ -2317,13 +2173,9 @@ local function setCurrentTarget(player)
 
 end
 
-
-
 local function chooseTarget()
 
     local targets = getValidTargets()
-
-
 
     if #targets == 0 then
 
@@ -2334,8 +2186,6 @@ local function chooseTarget()
         return
 
     end
-
-
 
     if state.TargetIndex < 1 or state.TargetIndex > #targets then
 
@@ -2343,19 +2193,13 @@ local function chooseTarget()
 
     end
 
-
-
     setCurrentTarget(targets[state.TargetIndex])
 
 end
 
-
-
 local function nextTarget()
 
     local targets = getValidTargets()
-
-
 
     if #targets == 0 then
 
@@ -2367,11 +2211,7 @@ local function nextTarget()
 
     end
 
-
-
     local currentPosition = 0
-
-
 
     for index, player in ipairs(targets) do
 
@@ -2385,8 +2225,6 @@ local function nextTarget()
 
     end
 
-
-
     if currentPosition == 0 then
 
         currentPosition = 1
@@ -2397,15 +2235,11 @@ local function nextTarget()
 
     end
 
-
-
     if currentPosition > #targets then
 
         currentPosition = 1
 
     end
-
-
 
     state.TargetIndex = currentPosition
 
@@ -2413,21 +2247,15 @@ local function nextTarget()
 
 end
 
-
-
 ------------------------------------------------------------------
 
 -- AIMBOT
 
 ------------------------------------------------------------------
 
-
-
 local function setAimbot(enabled)
 
     state.Aimbot = enabled
-
-
 
     if enabled then
 
@@ -2441,8 +2269,6 @@ local function setAimbot(enabled)
 
     end
 
-
-
     setButtonState(
 
         aimbotButton,
@@ -2454,8 +2280,6 @@ local function setAimbot(enabled)
     )
 
 end
-
-
 
 local function updateAimbot(deltaTime)
     if not state.Aimbot or not isCharacterReady() then
@@ -2508,15 +2332,11 @@ addConnection(aimbotButton.MouseButton1Click:Connect(function()
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- PLAYER TP
 
 ------------------------------------------------------------------
-
-
 
 local function createPlayerTPButton(player)
 
@@ -2525,8 +2345,6 @@ local function createPlayerTPButton(player)
         return
 
     end
-
-
 
     local button = Instance.new("TextButton")
 
@@ -2555,8 +2373,6 @@ local function createPlayerTPButton(player)
 
     button.Parent = playerTPScroll
 
-
-
     addCorner(button, 7)
     addStroke(button, Color3.fromRGB(255, 255, 255), 0.72, 1)
 
@@ -2565,14 +2381,10 @@ local function createPlayerTPButton(player)
 
     end))
 
-
-
     addConnection(button.MouseLeave:Connect(function()
         button.BackgroundColor3 = CONFIG.UI.Button
 
     end))
-
-
 
     addConnection(button.MouseButton1Click:Connect(function()
 
@@ -2582,11 +2394,7 @@ local function createPlayerTPButton(player)
                 return
             end
 
-
-
             local targetCharacter = player.Character
-
-
 
             if not targetCharacter then
 
@@ -2594,11 +2402,7 @@ local function createPlayerTPButton(player)
 
             end
 
-
-
             local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
-
-
 
             if not targetRoot then
                 return
@@ -2616,8 +2420,6 @@ local function createPlayerTPButton(player)
 
 end
 
-
-
 local function updatePlayerTPList()
 
     for _, child in ipairs(playerTPScroll:GetChildren()) do
@@ -2630,21 +2432,15 @@ local function updatePlayerTPList()
 
     end
 
-
-
     for _, player in ipairs(Players:GetPlayers()) do
 
         createPlayerTPButton(player)
 
     end
 
-
-
     playerTPScroll.CanvasSize = UDim2.fromOffset(0, playerTPLayout.AbsoluteContentSize.Y + 16)
 
 end
-
-
 
 addConnection(playerTPLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 
@@ -2652,15 +2448,11 @@ addConnection(playerTPLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Con
 
 end))
 
-
-
 addConnection(Players.PlayerAdded:Connect(function()
 
     task.defer(updatePlayerTPList)
 
 end))
-
-
 
 addConnection(Players.PlayerRemoving:Connect(function()
 
@@ -2668,23 +2460,15 @@ addConnection(Players.PlayerRemoving:Connect(function()
 
 end))
 
-
-
 updatePlayerTPList()
-
-
 
 addConnection(playerTPButton.MouseButton1Click:Connect(function()
     togglePanel(playerTPFrame)
 end))
 
-
-
 addConnection(localPlayerButton.MouseButton1Click:Connect(function()
     togglePanel(localFrame)
 end))
-
-
 
 ------------------------------------------------------------------
 
@@ -2692,17 +2476,11 @@ end))
 
 ------------------------------------------------------------------
 
-
-
 local mouse = LocalPlayer:GetMouse()
-
-
 
 local function mouseIsOverOurGui()
 
     local guiObjects = PlayerGui:GetGuiObjectsAtPosition(mouse.X, mouse.Y)
-
-
 
     for _, object in ipairs(guiObjects) do
 
@@ -2714,13 +2492,9 @@ local function mouseIsOverOurGui()
 
     end
 
-
-
     return false
 
 end
-
-
 
 local function doClickTP()
 
@@ -2730,21 +2504,15 @@ local function doClickTP()
 
     end
 
-
-
     if mouseIsOverOurGui() then
 
         return
 
     end
 
-
-
     if not mouse.Hit or not consumeTeleportCooldown() then
         return
     end
-
-
 
     safeCall("Click TP", function()
 
@@ -2754,15 +2522,11 @@ local function doClickTP()
 
 end
 
-
-
 addConnection(mouse.Button1Down:Connect(function()
 
     doClickTP()
 
 end))
-
-
 
 local function setClickTP(enabled)
 
@@ -2771,8 +2535,6 @@ local function setClickTP(enabled)
     setButtonState(clickTPButton, enabled, "Click TP: " .. (enabled and "ON" or "OFF"))
 
 end
-
-
 
 addConnection(clickTPButton.MouseButton1Click:Connect(function()
 
@@ -2784,25 +2546,17 @@ addConnection(clickTPButton.MouseButton1Click:Connect(function()
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- ANTI AFK
 
 ------------------------------------------------------------------
 
-
-
 local antiAFKConnection
-
-
 
 local function stopAntiAFK()
 
     state.AntiAFK = false
-
-
 
     if antiAFKConnection then
 
@@ -2812,13 +2566,9 @@ local function stopAntiAFK()
 
     end
 
-
-
     setButtonState(antiAFKButton, false, "AntiAFK: OFF")
 
 end
-
-
 
 local function startAntiAFK()
 
@@ -2830,11 +2580,7 @@ local function startAntiAFK()
 
     end
 
-
-
     state.AntiAFK = true
-
-
 
     antiAFKConnection = LocalPlayer.Idled:Connect(function()
 
@@ -2843,8 +2589,6 @@ local function startAntiAFK()
             return
 
         end
-
-
 
         safeCall("AntiAFK idle input", function()
 
@@ -2856,15 +2600,11 @@ local function startAntiAFK()
 
     end)
 
-
-
     addConnection(antiAFKConnection)
 
     setButtonState(antiAFKButton, true, "AntiAFK: ON")
 
 end
-
-
 
 local function setAntiAFK(enabled)
 
@@ -2880,8 +2620,6 @@ local function setAntiAFK(enabled)
 
 end
 
-
-
 addConnection(antiAFKButton.MouseButton1Click:Connect(function()
 
     safeCall("toggle AntiAFK", function()
@@ -2892,15 +2630,11 @@ addConnection(antiAFKButton.MouseButton1Click:Connect(function()
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- DRAGGING
 
 ------------------------------------------------------------------
-
-
 
 local function makeDraggable(handle, target)
 
@@ -2912,8 +2646,6 @@ local function makeDraggable(handle, target)
 
     local activeInput
 
-
-
     addConnection(handle.InputBegan:Connect(function(input)
 
         if input.UserInputType ~= Enum.UserInputType.MouseButton1
@@ -2924,8 +2656,6 @@ local function makeDraggable(handle, target)
 
         end
 
-
-
         dragging = true
 
         dragStart = input.Position
@@ -2933,8 +2663,6 @@ local function makeDraggable(handle, target)
         startPosition = target.Position
 
         activeInput = input
-
-
 
         addConnection(input.Changed:Connect(function()
 
@@ -2950,8 +2678,6 @@ local function makeDraggable(handle, target)
 
     end))
 
-
-
     addConnection(handle.InputChanged:Connect(function(input)
 
         if input.UserInputType == Enum.UserInputType.MouseMovement
@@ -2964,8 +2690,6 @@ local function makeDraggable(handle, target)
 
     end))
 
-
-
     addConnection(UserInputService.InputChanged:Connect(function(input)
 
         if not dragging or input ~= activeInput then
@@ -2974,11 +2698,7 @@ local function makeDraggable(handle, target)
 
         end
 
-
-
         local delta = input.Position - dragStart
-
-
 
         target.Position = UDim2.new(
 
@@ -2996,23 +2716,17 @@ local function makeDraggable(handle, target)
 
 end
 
-
-
 makeDraggable(title, mainFrame)
 
 makeDraggable(localTitle, localFrame)
 
 makeDraggable(playerTPTitle, playerTPFrame)
 
-
-
 ------------------------------------------------------------------
 
 -- MOVEMENT WATCHERS
 
 ------------------------------------------------------------------
-
-
 
 local function setupMovementWatchers()
 
@@ -3022,23 +2736,17 @@ local function setupMovementWatchers()
 
     end
 
-
-
     if walkSpeedChangedConnection then
 
         walkSpeedChangedConnection:Disconnect()
 
     end
 
-
-
     if jumpPowerChangedConnection then
 
         jumpPowerChangedConnection:Disconnect()
 
     end
-
-
 
     walkSpeedChangedConnection = Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
 
@@ -3050,8 +2758,6 @@ local function setupMovementWatchers()
 
     end)
 
-
-
     jumpPowerChangedConnection = Humanoid:GetPropertyChangedSignal("JumpPower"):Connect(function()
 
         if not state.JumpPowerEnabled and Humanoid and Humanoid.Parent then
@@ -3062,23 +2768,17 @@ local function setupMovementWatchers()
 
     end)
 
-
-
     addConnection(walkSpeedChangedConnection)
 
     addConnection(jumpPowerChangedConnection)
 
 end
 
-
-
 ------------------------------------------------------------------
 
 -- CHARACTER SETUP
 
 ------------------------------------------------------------------
-
-
 
 local function setupCharacter(newCharacter)
 
@@ -3087,8 +2787,6 @@ local function setupCharacter(newCharacter)
     Humanoid = Character:WaitForChild("Humanoid")
 
     HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-
-
 
     -- Vehicle fly controllers are tied to the old physics assembly.
 
@@ -3100,23 +2798,17 @@ local function setupCharacter(newCharacter)
 
     end
 
-
-
     gameWalkSpeed = Humanoid.WalkSpeed
 
     gameJumpPower = Humanoid.JumpPower
 
     gameUseJumpPower = Humanoid.UseJumpPower
 
-
-
     if state.WalkSpeedEnabled then
 
         Humanoid.WalkSpeed = state.WalkSpeed
 
     end
-
-
 
     if state.JumpPowerEnabled then
 
@@ -3126,8 +2818,6 @@ local function setupCharacter(newCharacter)
 
     end
 
-
-
     if state.Noclip then
 
         table.clear(noclipOriginal)
@@ -3136,15 +2826,11 @@ local function setupCharacter(newCharacter)
 
     end
 
-
-
     if humanoidDiedConnection then
 
         humanoidDiedConnection:Disconnect()
 
     end
-
-
 
     humanoidDiedConnection = Humanoid.Died:Connect(function()
 
@@ -3156,11 +2842,7 @@ local function setupCharacter(newCharacter)
 
     end)
 
-
-
     addConnection(humanoidDiedConnection)
-
-
 
     task.defer(function()
 
@@ -3174,8 +2856,6 @@ local function setupCharacter(newCharacter)
 
 end
 
-
-
 addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 
     safeCall("CharacterAdded setup", function()
@@ -3184,25 +2864,17 @@ addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 
         local shouldNoclipAgain = state.Noclip
 
-
-
         if state.Flying then
 
             stopFlying()
 
         end
 
-
-
         table.clear(noclipOriginal)
-
-
 
         setupCharacter(newCharacter)
 
         setupMovementWatchers()
-
-
 
         if shouldNoclipAgain then
 
@@ -3213,8 +2885,6 @@ addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
             applyNoclipToCharacter()
 
         end
-
-
 
         if shouldFlyAgain then
 
@@ -3234,27 +2904,19 @@ addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- GLOBAL RENDER STEP
 
 ------------------------------------------------------------------
 
-
-
 local lastNoclipUpdate = 0
-
-
 
 local fpsFrames = 0
 
 local fpsTimer = 0
 
 local pingTimer = 0
-
-
 
 RunService:BindToRenderStep(
 
@@ -3270,15 +2932,11 @@ RunService:BindToRenderStep(
 
         end
 
-
-
         ------------------------------------------------------------
 
         -- PERFORMANCE
 
         ------------------------------------------------------------
-
-
 
         fpsFrames += 1
 
@@ -3286,37 +2944,25 @@ RunService:BindToRenderStep(
 
         pingTimer += deltaTime
 
-
-
         if fpsTimer >= 0.5 then
 
             local fpsValue = math.floor((fpsFrames / fpsTimer) + 0.5)
-
-
 
             fpsFrames = 0
 
             fpsTimer = 0
 
-
-
             fpsLabel.Text = "FPS: " .. fpsValue
 
         end
-
-
 
         if pingTimer >= 0.5 then
 
             pingTimer = 0
 
-
-
             safeCall("update Ping", function()
 
                 local ping = LocalPlayer:GetNetworkPing()
-
-
 
                 if typeof(ping) == "number" then
 
@@ -3330,19 +2976,13 @@ RunService:BindToRenderStep(
 
         end
 
-
-
         ------------------------------------------------------------
 
         -- FLY
 
         ------------------------------------------------------------
 
-
-
         updateFly()
-
-
 
         ------------------------------------------------------------
 
@@ -3350,19 +2990,13 @@ RunService:BindToRenderStep(
 
         ------------------------------------------------------------
 
-
-
         updateAimbot(deltaTime)
-
-
 
         ------------------------------------------------------------
 
         -- HIGHLIGHTS
 
         ------------------------------------------------------------
-
-
 
         if state.Highlight then
 
@@ -3372,27 +3006,19 @@ RunService:BindToRenderStep(
 
         end
 
-
-
         ------------------------------------------------------------
 
         -- FULLBRIGHT
 
         ------------------------------------------------------------
 
-
-
         updateFullBright()
-
-
 
         ------------------------------------------------------------
 
         -- NOCLIP
 
         ------------------------------------------------------------
-
-
 
         if state.Noclip and os.clock() - lastNoclipUpdate >= CONFIG.Noclip.RefreshInterval then
 
@@ -3402,15 +3028,11 @@ RunService:BindToRenderStep(
 
         end
 
-
-
         ------------------------------------------------------------
 
         -- BHOP
 
         ------------------------------------------------------------
-
-
 
         if state.Bhop
             and isCharacterReady()
@@ -3428,8 +3050,6 @@ RunService:BindToRenderStep(
 
         ------------------------------------------------------------
 
-
-
         if isCharacterReady() then
 
             if state.WalkSpeedEnabled and not state.Flying then
@@ -3437,8 +3057,6 @@ RunService:BindToRenderStep(
                 Humanoid.WalkSpeed = state.WalkSpeed
 
             end
-
-
 
             if state.JumpPowerEnabled and not state.Flying then
 
@@ -3454,15 +3072,11 @@ RunService:BindToRenderStep(
 
 )
 
-
-
 ------------------------------------------------------------------
 
 -- KEYBOARD ACTIONS
 
 ------------------------------------------------------------------
-
-
 
 local function bindKey(actionName, keyCode, callback)
 
@@ -3472,11 +3086,7 @@ local function bindKey(actionName, keyCode, callback)
 
     end
 
-
-
     table.insert(ActionNames, actionName)
-
-
 
     ContextActionService:BindAction(
 
@@ -3490,15 +3100,11 @@ local function bindKey(actionName, keyCode, callback)
 
             end
 
-
-
             if inputState ~= Enum.UserInputState.Begin then
 
                 return Enum.ContextActionResult.Pass
 
             end
-
-
 
             -- Do not use feature hotkeys while typing. F1 stays available.
 
@@ -3506,13 +3112,9 @@ local function bindKey(actionName, keyCode, callback)
 
                 and UserInputService:GetFocusedTextBox() then
 
-
-
                 return Enum.ContextActionResult.Pass
 
             end
-
-
 
             safeCall("hotkey " .. actionName, callback)
 
@@ -3528,13 +3130,9 @@ local function bindKey(actionName, keyCode, callback)
 
 end
 
-
-
 bindKey("MegaPanelV13_ToggleGui", CONFIG.FeatureKeys.ToggleGui, function()
     toggleGuiVisibility()
 end)
-
-
 
 bindKey("MegaPanelV13_Fly", CONFIG.FeatureKeys.Fly, function()
 
@@ -3550,15 +3148,11 @@ bindKey("MegaPanelV13_Fly", CONFIG.FeatureKeys.Fly, function()
 
 end)
 
-
-
 bindKey("MegaPanelV13_InfiniteJump", CONFIG.FeatureKeys.InfiniteJump, function()
 
     setInfiniteJump(not state.InfiniteJump)
 
 end)
-
-
 
 bindKey("MegaPanelV13_Noclip", CONFIG.FeatureKeys.Noclip, function()
 
@@ -3566,23 +3160,17 @@ bindKey("MegaPanelV13_Noclip", CONFIG.FeatureKeys.Noclip, function()
 
 end)
 
-
-
 bindKey("MegaPanelV13_Bhop", CONFIG.FeatureKeys.Bhop, function()
 
     setBhop(not state.Bhop)
 
 end)
 
-
-
 bindKey("MegaPanelV13_Aimbot", CONFIG.FeatureKeys.Aimbot, function()
 
     setAimbot(not state.Aimbot)
 
 end)
-
-
 
 bindKey("MegaPanelV13_NextTarget", CONFIG.FeatureKeys.NextTarget, function()
 
@@ -3594,15 +3182,11 @@ bindKey("MegaPanelV13_NextTarget", CONFIG.FeatureKeys.NextTarget, function()
 
 end)
 
-
-
 bindKey("MegaPanelV13_Highlight", CONFIG.FeatureKeys.Highlight, function()
 
     setHighlight(not state.Highlight)
 
 end)
-
-
 
 bindKey("MegaPanelV13_AntiAFK", CONFIG.FeatureKeys.AntiAFK, function()
 
@@ -3610,15 +3194,11 @@ bindKey("MegaPanelV13_AntiAFK", CONFIG.FeatureKeys.AntiAFK, function()
 
 end)
 
-
-
 bindKey("MegaPanelV13_FullBright", CONFIG.FeatureKeys.FullBright, function()
 
     setFullBright(not state.FullBright)
 
 end)
-
-
 
 bindKey("MegaPanelV13_ClickTP", CONFIG.FeatureKeys.ClickTP, function()
 
@@ -3626,27 +3206,19 @@ bindKey("MegaPanelV13_ClickTP", CONFIG.FeatureKeys.ClickTP, function()
 
 end)
 
-
-
 bindKey("MegaPanelV13_PlayerTP", CONFIG.FeatureKeys.PlayerTP, function()
     togglePanel(playerTPFrame)
 end)
 
-
-
 bindKey("MegaPanelV13_LocalPlayer", CONFIG.FeatureKeys.LocalPlayer, function()
     togglePanel(localFrame)
 end)
-
-
 
 ------------------------------------------------------------------
 
 -- INITIAL CHARACTER
 
 ------------------------------------------------------------------
-
-
 
 getCharacterParts()
 
@@ -3656,27 +3228,19 @@ setupCharacter(Character)
 
 setupMovementWatchers()
 
-
-
 ------------------------------------------------------------------
 
 -- INITIAL HIGHLIGHTS
 
 ------------------------------------------------------------------
 
-
-
 safeCall("initial highlight refresh", refreshHighlights)
-
-
 
 ------------------------------------------------------------------
 
 -- INITIAL UI STATES
 
 ------------------------------------------------------------------
-
-
 
 setButtonState(infiniteJumpButton, state.InfiniteJump, "Inf. Jump: " .. (state.InfiniteJump and "ON" or "OFF"))
 
@@ -3700,15 +3264,11 @@ setButtonState(clickTPButton, state.ClickTP, "Click TP: " .. (state.ClickTP and 
 
 setButtonState(fullBrightButton, state.FullBright, "FullBright: " .. (state.FullBright and "ON" or "OFF"))
 
-
-
 ------------------------------------------------------------------
 
 -- CLOSE / CLEANUP
 
 ------------------------------------------------------------------
-
-
 
 local function cleanup()
 
@@ -3718,11 +3278,7 @@ local function cleanup()
 
     end
 
-
-
     destroyed = true
-
-
 
     state.InfiniteJump = false
 
@@ -3759,15 +3315,11 @@ local function cleanup()
 
     end
 
-
-
     if state.AntiAFK then
 
         stopAntiAFK()
 
     end
-
-
 
     if originalLighting then
 
@@ -3777,15 +3329,9 @@ local function cleanup()
 
     end
 
-
-
     stopNoclip()
 
-
-
     RunService:UnbindFromRenderStep("MegaPanelV13_Render")
-
-
 
     for _, actionName in ipairs(ActionNames) do
 
@@ -3793,11 +3339,7 @@ local function cleanup()
 
     end
 
-
-
     table.clear(ActionNames)
-
-
 
     for player, info in pairs(highlights) do
 
@@ -3811,8 +3353,6 @@ local function cleanup()
 
         end
 
-
-
         if info and info.billboard then
 
             safeCall("cleanup highlight info", function()
@@ -3823,13 +3363,9 @@ local function cleanup()
 
         end
 
-
-
         highlights[player] = nil
 
     end
-
-
 
     if highlightFolder then
 
@@ -3841,11 +3377,7 @@ local function cleanup()
 
     end
 
-
-
     cleanupConnections()
-
-
 
     if gui then
 
@@ -3859,8 +3391,6 @@ local function cleanup()
 
 end
 
-
-
 addConnection(closeButton.MouseButton1Click:Connect(function()
     guiVisible = false
     animatePanel(mainFrame, false)
@@ -3873,15 +3403,11 @@ addConnection(closeButton.MouseButton1Click:Connect(function()
     task.delay(0.42, cleanup)
 end))
 
-
-
 ------------------------------------------------------------------
 
 -- FINAL
 
 ------------------------------------------------------------------
-
-
 
 print("[MegaPanel V14 Cosmic] loaded successfully.")
 
