@@ -1,527 +1,205 @@
---// MEGA PANEL V13 - GIGACHAD
-
-------------------------------------------------------------------
-
--- SERVICES
-
-------------------------------------------------------------------
-
-
-
 local Players = game:GetService("Players")
-
 local UserInputService = game:GetService("UserInputService")
-
 local RunService = game:GetService("RunService")
-
 local TweenService = game:GetService("TweenService")
-
 local Lighting = game:GetService("Lighting")
-
 local ContextActionService = game:GetService("ContextActionService")
-
 local VirtualUser = game:GetService("VirtualUser")
 
-
-
-------------------------------------------------------------------
-
--- PLAYER
-
-------------------------------------------------------------------
-
-
-
 local LocalPlayer = Players.LocalPlayer
-
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-
-
-------------------------------------------------------------------
-
--- CONFIG
-
-------------------------------------------------------------------
-
-
-
 local milion = 1000000
-
-
-
 local CONFIG = {
-
     UI = {
-
         DisplayOrder = 2147483647,
-
         MainSize = Vector2.new(250, 590),
-
         LocalSize = Vector2.new(315, 555),
-
         PlayerTPSize = Vector2.new(235, 325),
-
-
-
         MainPosition = UDim2.fromOffset(20, 140),
-
         LocalPosition = UDim2.fromOffset(285, 120),
-
         PlayerTPPosition = UDim2.fromOffset(285, 150),
-
-
-
         CornerRadius = 10,
-
         ButtonCornerRadius = 8,
-
-
-
-        -- Sci-fi monochrome + orange accent (#D95F02)
         Orange = Color3.fromRGB(217, 95, 2),
         OrangeHover = Color3.fromRGB(242, 119, 25),
         Dark = Color3.fromRGB(6, 6, 8),
         Darker = Color3.fromRGB(0, 0, 0),
         Panel = Color3.fromRGB(8, 8, 10),
         Panel2 = Color3.fromRGB(17, 17, 20),
-        Button = Color3.fromRGB(92, 92, 92), -- #5C5C5C
+        Button = Color3.fromRGB(92, 92, 92),
         ButtonHover = Color3.fromRGB(112, 112, 112),
         Stud = Color3.fromRGB(112, 116, 124),
         White = Color3.fromRGB(245, 245, 245),
         Gray = Color3.fromRGB(177, 177, 177),
-
         Green = Color3.fromRGB(60, 220, 110),
-
         Red = Color3.fromRGB(235, 70, 70),
-
         Yellow = Color3.fromRGB(255, 225, 60),
-
         BlueGray = Color3.fromRGB(95, 105, 115),
-
     },
-
-
-
     WalkSpeed = {
-
         DefaultCustom = 50,
-
         Min = 1,
-
         Max = milion,
-
     },
-
-
-
     JumpPower = {
-
         DefaultCustom = 50,
-
         Min = 0,
-
         Max = milion,
-
     },
-
-
-
     Fly = {
-
         DefaultSpeed = 100,
-
         MinSpeed = 10,
-
         MaxSpeed = milion,
-
     },
-
-
-
     Aimbot = {
-
         Smoothness = 0.35,
-
         TargetPart = "Head",
-
     },
-
-
-
     Highlight = {
-
         FillTransparency = 0.55,
-
         OutlineTransparency = 0,
-
         RefreshInterval = 0.25,
-
         InfoRefreshInterval = 0.10,
-
         BillboardSize = Vector2.new(250, 54),
-
         StudsOffset = Vector3.new(0, 3.45, 0),
-
     },
-
-
-
     FullBright = {
-
         RefreshInterval = 0.35,
-
     },
-
-
-
     Noclip = {
-
         RefreshInterval = 0.08,
-
     },
-
-
-
     Bhop = {
-
         Interval = 0.1,
-
     },
-
-
-
     AntiAFK = {
-
         ClickDelay = 0.15,
-
     },
-
-
 
     FeatureKeys = {
-
         ToggleGui = Enum.KeyCode.F1,
-
         Fly = Enum.KeyCode.F,
-
         InfiniteJump = Enum.KeyCode.Z,
-
         Noclip = Enum.KeyCode.T,
-
         Bhop = Enum.KeyCode.B,
-
         Aimbot = Enum.KeyCode.X,
-
         NextTarget = Enum.KeyCode.C,
-
         Highlight = Enum.KeyCode.H,
-
         AntiAFK = Enum.KeyCode.K,
-
         FullBright = Enum.KeyCode.J,
-
         ClickTP = Enum.KeyCode.L,
-
         PlayerTP = Enum.KeyCode.V,
-
         LocalPlayer = Enum.KeyCode.Y,
-
     },
-
 }
-
-
-
-------------------------------------------------------------------
-
--- SAFE CALL
-
-------------------------------------------------------------------
-
-
 
 local function safeCall(label, callback, ...)
-
     local ok, result = pcall(callback, ...)
-
-
-
     if not ok then
-
         warn("[MegaPanel V13] " .. tostring(label) .. " failed:", result)
-
         return nil
-
     end
-
-
-
     return result
-
 end
-
-
-
-------------------------------------------------------------------
-
--- STATE
-
-------------------------------------------------------------------
-
-
 
 local state = {
-
     InfiniteJump = false,
-
     Flying = false,
-
     Noclip = false,
-
     Bhop = false,
-
     Aimbot = false,
-
     Highlight = true,
-
     FullBright = false,
-
     ClickTP = false,
-
     AntiAFK = false,
-
-
-
     WalkSpeedEnabled = false,
-
     JumpPowerEnabled = false,
-
-
-
     WalkSpeed = CONFIG.WalkSpeed.DefaultCustom,
-
     JumpPower = CONFIG.JumpPower.DefaultCustom,
-
     FlySpeed = CONFIG.Fly.DefaultSpeed,
-
-
-
     TargetIndex = 1,
-
     CurrentTarget = nil,
-
 }
 
-
-
-------------------------------------------------------------------
-
--- CHARACTER REFERENCES
-
-------------------------------------------------------------------
-
-
-
 local Character
-
 local Humanoid
-
 local HumanoidRootPart
-
-
-
 local gameWalkSpeed = 16
-
 local gameJumpPower = 50
-
 local gameUseJumpPower = true
-
-
-
 local humanoidDiedConnection
-
 local walkSpeedChangedConnection
-
 local jumpPowerChangedConnection
 
-
-
-------------------------------------------------------------------
-
--- CONNECTION MANAGER
-
-------------------------------------------------------------------
-
-
-
 local Connections = {}
-
 local ActionNames = {}
-
 local destroyed = false
 
-
-
 local function addConnection(connection)
-
     if connection then
-
         table.insert(Connections, connection)
-
     end
-
-
-
     return connection
-
 end
-
-
 
 local function disconnectConnection(connection)
-
     if connection and connection.Connected then
-
         connection:Disconnect()
-
     end
-
 end
-
-
 
 local function cleanupConnections()
-
     for _, connection in ipairs(Connections) do
-
         disconnectConnection(connection)
-
     end
-
-
-
     table.clear(Connections)
-
 end
-
-
-
-------------------------------------------------------------------
-
--- DESTROY OLD INSTANCE
-
-------------------------------------------------------------------
-
-
 
 local existingGui = PlayerGui:FindFirstChild("MegaPanelV13")
-
-
-
 if existingGui then
-
     safeCall("destroy old GUI", function()
-
         existingGui:Destroy()
-
     end)
-
 end
-
-
-
-------------------------------------------------------------------
-
--- GUI HELPERS
-
-------------------------------------------------------------------
-
-
 
 local function addCorner(instance, radius)
-
     local corner = Instance.new("UICorner")
-
     corner.CornerRadius = UDim.new(0, radius or CONFIG.UI.CornerRadius)
-
     corner.Parent = instance
-
     return corner
-
 end
-
-
 
 local function addStroke(instance, color, transparency, thickness)
-
     local stroke = Instance.new("UIStroke")
-
     stroke.Color = color or Color3.new(1, 1, 1)
-
     stroke.Transparency = transparency or 0
-
     stroke.Thickness = thickness or 1
-
     stroke.Parent = instance
-
     return stroke
-
 end
-
-
 
 local function addPadding(instance, left, right, top, bottom)
-
     local padding = Instance.new("UIPadding")
-
     padding.PaddingLeft = UDim.new(0, left or 0)
-
     padding.PaddingRight = UDim.new(0, right or 0)
-
     padding.PaddingTop = UDim.new(0, top or 0)
-
     padding.PaddingBottom = UDim.new(0, bottom or 0)
-
     padding.Parent = instance
-
     return padding
-
 end
-
-
 
 local function getKeyDisplay(keyCode)
-
     local display = safeCall("get key display", function()
-
         return UserInputService:GetStringForKeyCode(keyCode)
-
     end)
-
-
-
     if display and display ~= "" then
-
         return string.upper(display)
-
     end
-
-
-
+    
     local raw = tostring(keyCode):gsub("Enum.KeyCode.", "")
-
     return string.upper(raw)
-
 end
-
-
-
-------------------------------------------------------------------
-
-------------------------------------------------------------------
--- SCI-FI SURFACE: black glass, soft shader-like gradient and classic studs
-------------------------------------------------------------------
 
 local function applySciFiSurface(frame)
     frame.BackgroundColor3 = CONFIG.UI.Dark
@@ -540,8 +218,6 @@ local function applySciFiSurface(frame)
 
     addStroke(frame, Color3.fromRGB(255, 255, 255), 0.12, 1.25)
 
-    -- Subtle raised dots inspired by the classic Roblox stud texture.
-    -- They sit behind content and remain intentionally low-contrast.
     local width = math.max(frame.Size.X.Offset, 180)
     local height = math.max(frame.Size.Y.Offset, 100)
     local spacing = 36
@@ -562,238 +238,98 @@ local function applySciFiSurface(frame)
     end
 end
 
--- SCREEN GUI
-
-------------------------------------------------------------------
-
-
-
 local gui = Instance.new("ScreenGui")
-
 gui.Name = "MegaPanelV13"
-
 gui.ResetOnSpawn = false
-
 gui.IgnoreGuiInset = true
-
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-
 gui.DisplayOrder = CONFIG.UI.DisplayOrder
-
 gui.Enabled = true
-
 gui.Parent = PlayerGui
 
-
-
-------------------------------------------------------------------
-
--- MAIN PANEL
-
-------------------------------------------------------------------
-
-
-
 local mainFrame = Instance.new("Frame")
-
 mainFrame.Name = "MainPanel"
-
 mainFrame.Size = UDim2.fromOffset(CONFIG.UI.MainSize.X, CONFIG.UI.MainSize.Y)
-
 mainFrame.Position = CONFIG.UI.MainPosition
-
 mainFrame.BackgroundColor3 = CONFIG.UI.Panel
-
 mainFrame.BorderSizePixel = 0
-
 mainFrame.ZIndex = 1000
-
 mainFrame.Parent = gui
 
-
-
 addCorner(mainFrame, CONFIG.UI.CornerRadius)
-
 applySciFiSurface(mainFrame)
 
-
-
-------------------------------------------------------------------
-
--- MAIN TITLE
-
-------------------------------------------------------------------
-
-
-
 local title = Instance.new("TextLabel")
-
 title.Name = "Title"
-
 title.Size = UDim2.new(1, -54, 0, 38)
-
 title.Position = UDim2.fromOffset(12, 8)
-
 title.BackgroundTransparency = 1
-
 title.Text = "MEGA PANEL V14"
-
 title.TextColor3 = Color3.fromRGB(217, 95, 2)
-
 title.TextSize = 20
-
 title.Font = Enum.Font.GothamBold
-
 title.TextXAlignment = Enum.TextXAlignment.Left
-
 title.ZIndex = 1001
-
 title.Parent = mainFrame
 
-
-
 local versionLabel = Instance.new("TextLabel")
-
 versionLabel.Name = "VersionLabel"
-
 versionLabel.Size = UDim2.new(1, -24, 0, 20)
-
 versionLabel.Position = UDim2.fromOffset(12, 43)
-
 versionLabel.BackgroundTransparency = 1
-
 versionLabel.Text = "COSMIC • V14 • LOCAL"
-
 versionLabel.TextColor3 = CONFIG.UI.Gray
-
 versionLabel.TextSize = 11
-
 versionLabel.Font = Enum.Font.Gotham
-
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 versionLabel.ZIndex = 1001
-
 versionLabel.Parent = mainFrame
 
-
-
-------------------------------------------------------------------
-
--- CLOSE BUTTON
-
-------------------------------------------------------------------
-
-
-
 local closeButton = Instance.new("TextButton")
-
 closeButton.Name = "Close"
-
 closeButton.Size = UDim2.fromOffset(32, 32)
-
 closeButton.Position = UDim2.new(1, -42, 0, 8)
-
 closeButton.BackgroundColor3 = CONFIG.UI.Button
-
 closeButton.Text = "X"
-
 closeButton.TextColor3 = Color3.new(1, 1, 1)
-
 closeButton.TextSize = 16
-
 closeButton.Font = Enum.Font.GothamBold
-
 closeButton.AutoButtonColor = false
-
 closeButton.ZIndex = 1005
-
 closeButton.Parent = mainFrame
-
-
 
 addCorner(closeButton, 7)
 addStroke(closeButton, Color3.fromRGB(255, 255, 255), 0.42, 1)
 
-
-
-------------------------------------------------------------------
-
--- STATUS LABEL
-
-------------------------------------------------------------------
-
-
-
 local targetStatus = Instance.new("TextLabel")
-
 targetStatus.Name = "TargetStatus"
-
 targetStatus.Size = UDim2.new(1, -24, 0, 28)
-
 targetStatus.Position = UDim2.fromOffset(12, 72)
-
 targetStatus.BackgroundColor3 = CONFIG.UI.Darker
-
 targetStatus.Text = "TARGET: NONE"
-
 targetStatus.TextColor3 = CONFIG.UI.Gray
-
 targetStatus.TextSize = 12
-
 targetStatus.Font = Enum.Font.GothamBold
-
 targetStatus.TextXAlignment = Enum.TextXAlignment.Left
-
 targetStatus.ZIndex = 1001
-
 targetStatus.Parent = mainFrame
-
-
 
 addCorner(targetStatus, 7)
 addStroke(targetStatus, Color3.fromRGB(255, 255, 255), 0.78, 1)
 addPadding(targetStatus, 10, 8, 0, 0)
 
-
-
-------------------------------------------------------------------
-
--- BUTTON FACTORY
-
-------------------------------------------------------------------
-
-
-
 local buttonIndex = 0
-
-
-
 local function createButton(parent, text, keyCode)
-
     buttonIndex += 1
-
-
-
     local button = Instance.new("TextButton")
-
     button.Name = "Button_" .. buttonIndex
-
     button.Size = UDim2.new(1, -24, 0, 40)
-
     button.BackgroundColor3 = CONFIG.UI.Button
-
     button.BorderSizePixel = 0
-
     button.AutoButtonColor = false
-
     button.Text = ""
-
     button.ZIndex = 1001
-
     button.Parent = parent
-
-
 
     addCorner(button, CONFIG.UI.ButtonCornerRadius)
     addStroke(button, Color3.fromRGB(255, 255, 255), 0.56, 1)
@@ -809,416 +345,187 @@ local function createButton(parent, text, keyCode)
     addCorner(edgeAccent, 2)
 
     local buttonText = Instance.new("TextLabel")
-
     buttonText.Name = "Text"
-
     buttonText.Size = UDim2.new(1, keyCode and -68 or -20, 1, 0)
-
     buttonText.Position = UDim2.fromOffset(10, 0)
-
     buttonText.BackgroundTransparency = 1
-
     buttonText.Text = text
-
     buttonText.TextColor3 = CONFIG.UI.White
     buttonText.TextStrokeColor3 = CONFIG.UI.Orange
     buttonText.TextStrokeTransparency = 0.82
-
     buttonText.TextSize = 13
-
     buttonText.Font = Enum.Font.GothamBold
-
     buttonText.TextXAlignment = Enum.TextXAlignment.Left
-
     buttonText.TextTruncate = Enum.TextTruncate.AtEnd
-
     buttonText.ZIndex = 1002
-
     buttonText.Parent = button
 
-
-
     if keyCode then
-
         local keySlot = Instance.new("TextLabel")
-
         keySlot.Name = "Hotkey"
-
         keySlot.Size = UDim2.fromOffset(42, 26)
-
         keySlot.AnchorPoint = Vector2.new(1, 0.5)
-
         keySlot.Position = UDim2.new(1, -7, 0.5, 0)
-
         keySlot.BackgroundColor3 = CONFIG.UI.Darker
-
         keySlot.BackgroundTransparency = 0.12
-
         keySlot.Text = getKeyDisplay(keyCode)
-
         keySlot.TextColor3 = CONFIG.UI.White
-
         keySlot.TextSize = 10
-
         keySlot.Font = Enum.Font.GothamBold
-
         keySlot.TextXAlignment = Enum.TextXAlignment.Center
-
         keySlot.TextYAlignment = Enum.TextYAlignment.Center
-
         keySlot.ZIndex = 1003
-
         keySlot.Parent = button
 
-
-
         addCorner(keySlot, 6)
-
         addStroke(keySlot, Color3.fromRGB(255, 255, 255), 0.55, 1)
-
     end
-
-
 
     addConnection(button.MouseEnter:Connect(function()
-
         if not button.Parent then
-
             return
-
         end
-
-
-
         TweenService:Create(
-
             button,
-
             TweenInfo.new(0.12),
-
             {BackgroundColor3 = button:GetAttribute("Active") and CONFIG.UI.OrangeHover or CONFIG.UI.ButtonHover}
-
         ):Play()
-
     end))
-
-
 
     addConnection(button.MouseLeave:Connect(function()
-
         if not button.Parent then
-
             return
-
         end
 
-
-
         TweenService:Create(
-
             button,
-
             TweenInfo.new(0.12),
-
             {BackgroundColor3 = button:GetAttribute("Active") and CONFIG.UI.Orange or CONFIG.UI.Button}
-
         ):Play()
-
     end))
 
-
-
     return button, buttonText
-
 end
 
-
-
 local function setButtonState(button, enabled, customLabel)
-
     if not button or not button.Parent then
-
         return
-
     end
-
-
 
     button:SetAttribute("Active", enabled)
 
-
-
     local label = button:FindFirstChild("Text")
-
-
-
     if label then
-
         label.Text = customLabel
-
     end
 
-
-
     TweenService:Create(
-
         button,
-
         TweenInfo.new(0.12),
-
         {BackgroundColor3 = enabled and CONFIG.UI.Orange or CONFIG.UI.Button}
-
     ):Play()
-
 end
-
-
-
-------------------------------------------------------------------
-
--- MAIN BUTTONS
-
-------------------------------------------------------------------
-
-
 
 local function createMainButton(text, keyCode)
-
     local button = createButton(mainFrame, text, keyCode)
-
-
-
     button.Position = UDim2.fromOffset(12, 108 + ((buttonIndex - 1) * 46))
-
-
-
     return button
-
 end
 
-
-
 local infiniteJumpButton = createMainButton("Inf. Jump: OFF", CONFIG.FeatureKeys.InfiniteJump)
-
 local flyButton = createMainButton("Flying: OFF", CONFIG.FeatureKeys.Fly)
-
 local aimbotButton = createMainButton("Aimbot: OFF", CONFIG.FeatureKeys.Aimbot)
-
 local noclipButton = createMainButton("Noclip: OFF", CONFIG.FeatureKeys.Noclip)
-
 local bhopButton = createMainButton("Bhop: OFF", CONFIG.FeatureKeys.Bhop)
-
 local highlightButton = createMainButton("Highlight: ON", CONFIG.FeatureKeys.Highlight)
-
 local playerTPButton = createMainButton("Player TP", CONFIG.FeatureKeys.PlayerTP)
-
 local localPlayerButton = createMainButton("LocalPlayer", CONFIG.FeatureKeys.LocalPlayer)
 
-
-
-------------------------------------------------------------------
-
--- MAIN FOOTER
-
-------------------------------------------------------------------
-
-
-
 local noteLabel = Instance.new("TextLabel")
-
 noteLabel.Name = "Note"
-
 noteLabel.Size = UDim2.new(1, -24, 0, 50)
-
 noteLabel.Position = UDim2.new(0, 12, 1, -58)
-
 noteLabel.BackgroundTransparency = 1
-
 noteLabel.Text = "C = next target\nF1 = show / hide panel"
-
 noteLabel.TextColor3 = CONFIG.UI.Gray
-
 noteLabel.TextSize = 11
-
 noteLabel.Font = Enum.Font.Gotham
-
 noteLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 noteLabel.TextYAlignment = Enum.TextYAlignment.Bottom
-
 noteLabel.ZIndex = 1001
-
 noteLabel.Parent = mainFrame
 
-
-
-------------------------------------------------------------------
-
--- LOCAL PLAYER PANEL
-
-------------------------------------------------------------------
-
-
-
 local localFrame = Instance.new("Frame")
-
 localFrame.Name = "LocalPlayerPanel"
-
 localFrame.Size = UDim2.fromOffset(CONFIG.UI.LocalSize.X, CONFIG.UI.LocalSize.Y)
-
 localFrame.Position = CONFIG.UI.LocalPosition
-
 localFrame.BackgroundColor3 = CONFIG.UI.Panel
-
 localFrame.BorderSizePixel = 0
-
 localFrame.Visible = false
-
 localFrame.ZIndex = 900
-
 localFrame.Parent = gui
 
-
-
 addCorner(localFrame, CONFIG.UI.CornerRadius)
-
 applySciFiSurface(localFrame)
 
-
-
 local localTitle = Instance.new("TextLabel")
-
 localTitle.Name = "LocalTitle"
-
 localTitle.Size = UDim2.new(1, -20, 0, 34)
-
 localTitle.Position = UDim2.fromOffset(10, 8)
-
 localTitle.BackgroundTransparency = 1
-
 localTitle.Text = "LOCAL PLAYER"
-
 localTitle.TextColor3 = Color3.fromRGB(217, 95, 2)
-
 localTitle.TextSize = 18
-
 localTitle.Font = Enum.Font.GothamBold
-
 localTitle.TextXAlignment = Enum.TextXAlignment.Left
-
 localTitle.ZIndex = 901
-
 localTitle.Parent = localFrame
 
 
 
 local localScroll = Instance.new("ScrollingFrame")
-
 localScroll.Name = "Scroll"
-
 localScroll.Size = UDim2.new(1, -16, 1, -52)
-
 localScroll.Position = UDim2.fromOffset(8, 44)
-
 localScroll.BackgroundTransparency = 1
-
 localScroll.BorderSizePixel = 0
-
 localScroll.ScrollBarThickness = 5
-
 localScroll.CanvasSize = UDim2.fromOffset(0, 0)
-
 localScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
-
 localScroll.ZIndex = 901
-
 localScroll.Parent = localFrame
 
-
-
 local localLayout = Instance.new("UIListLayout")
-
 localLayout.Padding = UDim.new(0, 8)
-
 localLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
 localLayout.Parent = localScroll
-
-
 
 addPadding(localScroll, 4, 4, 4, 8)
 
-
-
-------------------------------------------------------------------
-
--- LOCAL BUTTON FACTORY
-
-------------------------------------------------------------------
-
-
-
 local localButtonCount = 0
-
-
-
 local function createLocalButton(text, keyCode)
-
     localButtonCount += 1
-
-
-
     local button = createButton(localScroll, text, keyCode)
-
     button.Size = UDim2.new(1, -8, 0, 40)
-
     button.LayoutOrder = localButtonCount
-
     button.ZIndex = 902
-
-
-
     return button
-
 end
-
-
-
 local function createSectionHeader(text)
-
     localButtonCount += 1
-
-
-
     local header = Instance.new("TextLabel")
-
     header.Size = UDim2.new(1, -8, 0, 22)
-
     header.BackgroundTransparency = 1
-
     header.Text = text
-
     header.TextColor3 = Color3.fromRGB(217, 95, 2)
-
     header.TextSize = 12
-
     header.Font = Enum.Font.GothamBold
-
     header.TextXAlignment = Enum.TextXAlignment.Left
-
     header.LayoutOrder = localButtonCount
-
     header.ZIndex = 902
-
     header.Parent = localScroll
-
-
-
     return header
-
 end
-
-
 
 local function createNumberBox(placeholder, initialValue)
     localButtonCount += 1
@@ -1268,24 +575,11 @@ local function createNumberBox(placeholder, initialValue)
     return box
 end
 
-
-------------------------------------------------------------------
-
--- Requested layout order: each setting is grouped with its input.
-
--- 1. WalkSpeed switch
 local walkSpeedToggle = createLocalButton("WalkSpeed: OFF", nil)
-
--- 2. WalkSpeed input
 local walkSpeedInput = createNumberBox("WalkSpeed", state.WalkSpeed)
-
--- 3. JumpPower switch
 local jumpPowerToggle = createLocalButton("JumpPower: OFF", nil)
-
--- 4. JumpPower input
 local jumpPowerInput = createNumberBox("JumpPower", state.JumpPower)
 
--- 5. Divider
 local separatorSlot = Instance.new("Frame")
 separatorSlot.Name = "Separator"
 separatorSlot.Size = UDim2.new(1, -8, 0, 14)
@@ -1306,131 +600,65 @@ separator.Parent = separatorSlot
 
 localButtonCount += 1
 
--- 6. FlySpeed input
 local flySpeedInput = createNumberBox("FlySpeed", state.FlySpeed)
-
--- Utility toggles
 local antiAFKButton = createLocalButton("AntiAFK: OFF", CONFIG.FeatureKeys.AntiAFK)
 local clickTPButton = createLocalButton("Click TP: OFF", CONFIG.FeatureKeys.ClickTP)
 local fullBrightButton = createLocalButton("FullBright: OFF", CONFIG.FeatureKeys.FullBright)
 
--- PERFORMANCE
-
-------------------------------------------------------------------
-
-
-
 local performanceHeader = Instance.new("TextLabel")
-
 performanceHeader.Name = "PerformanceHeader"
-
 performanceHeader.Size = UDim2.new(1, -8, 0, 22)
-
 performanceHeader.BackgroundTransparency = 1
-
 performanceHeader.Text = "PERFORMANCE"
-
 performanceHeader.TextColor3 = CONFIG.UI.White
-
 performanceHeader.TextSize = 12
-
 performanceHeader.Font = Enum.Font.GothamBold
-
 performanceHeader.TextXAlignment = Enum.TextXAlignment.Left
 
 localButtonCount += 1
 
 performanceHeader.LayoutOrder = localButtonCount
-
 performanceHeader.ZIndex = 902
-
 performanceHeader.Parent = localScroll
 
-
-
 local performanceFrame = Instance.new("Frame")
-
 performanceFrame.Name = "Performance"
-
 performanceFrame.Size = UDim2.new(1, -8, 0, 42)
-
 performanceFrame.BackgroundColor3 = CONFIG.UI.Darker
-
 performanceFrame.BorderSizePixel = 0
-
 localButtonCount += 1
-
 performanceFrame.LayoutOrder = localButtonCount
-
 performanceFrame.ZIndex = 902
-
 performanceFrame.Parent = localScroll
 
-
-
 addCorner(performanceFrame, 7)
-
 addStroke(performanceFrame, Color3.fromRGB(255, 255, 255), 0.68, 1)
 
-
-
 local fpsLabel = Instance.new("TextLabel")
-
 fpsLabel.Name = "FPS"
-
 fpsLabel.Size = UDim2.new(0.5, -4, 1, 0)
-
 fpsLabel.Position = UDim2.fromOffset(8, 0)
-
 fpsLabel.BackgroundTransparency = 1
-
 fpsLabel.Text = "FPS: --"
-
 fpsLabel.TextColor3 = CONFIG.UI.Green
-
 fpsLabel.TextSize = 12
-
 fpsLabel.Font = Enum.Font.GothamBold
-
 fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 fpsLabel.ZIndex = 903
-
 fpsLabel.Parent = performanceFrame
 
-
-
 local pingLabel = Instance.new("TextLabel")
-
 pingLabel.Name = "Ping"
-
 pingLabel.Size = UDim2.new(0.5, -8, 1, 0)
-
 pingLabel.Position = UDim2.new(0.5, 0, 0, 0)
-
 pingLabel.BackgroundTransparency = 1
-
 pingLabel.Text = "PING: --"
-
 pingLabel.TextColor3 = CONFIG.UI.Yellow
-
 pingLabel.TextSize = 12
-
 pingLabel.Font = Enum.Font.GothamBold
-
 pingLabel.TextXAlignment = Enum.TextXAlignment.Right
-
 pingLabel.ZIndex = 903
-
 pingLabel.Parent = performanceFrame
-
-
-
-------------------------------------------------------------------
-
-------------------------------------------------------------------
--- EMOTES: register catalog emotes on the active Humanoid and play them
-------------------------------------------------------------------
 
 local PANEL_EMOTES = {
     {Key = "Panel_Lay", Label = "Leżenie", Id = 104104787736608},
@@ -1458,33 +686,13 @@ for _, emote in ipairs(PANEL_EMOTES) do
     end))
 end
 
--- UPDATE LOCAL CANVAS
-
-------------------------------------------------------------------
-
-
-
 local function updateLocalCanvas()
-
     local contentHeight = localLayout.AbsoluteContentSize.Y + 16
-
     localScroll.CanvasSize = UDim2.fromOffset(0, contentHeight)
-
 end
 
-
-
 addConnection(localLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateLocalCanvas))
-
 updateLocalCanvas()
-
-
-
-------------------------------------------------------------------
-
-------------------------------------------------------------------
--- TELEPORT COOLDOWN (0.1 s, shared by both teleport methods)
-------------------------------------------------------------------
 
 local TELEPORT_COOLDOWN = 0.1
 local lastTeleportAt = -math.huge
@@ -1498,104 +706,51 @@ local function consumeTeleportCooldown()
     return true
 end
 
--- PLAYER TP PANEL
-
-------------------------------------------------------------------
-
-
-
 local playerTPFrame = Instance.new("Frame")
-
 playerTPFrame.Name = "PlayerTPPanel"
-
 playerTPFrame.Size = UDim2.fromOffset(CONFIG.UI.PlayerTPSize.X, CONFIG.UI.PlayerTPSize.Y)
-
 playerTPFrame.Position = CONFIG.UI.PlayerTPPosition
-
 playerTPFrame.BackgroundColor3 = CONFIG.UI.Panel
-
 playerTPFrame.BorderSizePixel = 0
-
 playerTPFrame.Visible = false
-
 playerTPFrame.ZIndex = 850
-
 playerTPFrame.Parent = gui
 
-
-
 addCorner(playerTPFrame, CONFIG.UI.CornerRadius)
-
 applySciFiSurface(playerTPFrame)
 
-
-
 local playerTPTitle = Instance.new("TextLabel")
-
 playerTPTitle.Name = "Title"
-
 playerTPTitle.Size = UDim2.new(1, -20, 0, 34)
-
 playerTPTitle.Position = UDim2.fromOffset(10, 8)
-
 playerTPTitle.BackgroundTransparency = 1
-
 playerTPTitle.Text = "PLAYER TP"
-
 playerTPTitle.TextColor3 = Color3.fromRGB(217, 95, 2)
-
 playerTPTitle.TextSize = 18
-
 playerTPTitle.Font = Enum.Font.GothamBold
-
 playerTPTitle.TextXAlignment = Enum.TextXAlignment.Left
-
 playerTPTitle.ZIndex = 851
-
 playerTPTitle.Parent = playerTPFrame
 
-
-
 local playerTPScroll = Instance.new("ScrollingFrame")
-
 playerTPScroll.Name = "Scroll"
-
 playerTPScroll.Size = UDim2.new(1, -16, 1, -50)
-
 playerTPScroll.Position = UDim2.fromOffset(8, 44)
-
 playerTPScroll.BackgroundTransparency = 1
-
 playerTPScroll.BorderSizePixel = 0
-
 playerTPScroll.ScrollBarThickness = 5
-
 playerTPScroll.CanvasSize = UDim2.fromOffset(0, 0)
-
 playerTPScroll.ZIndex = 851
-
 playerTPScroll.Parent = playerTPFrame
 
 
 
 local playerTPLayout = Instance.new("UIListLayout")
-
 playerTPLayout.Padding = UDim.new(0, 6)
-
 playerTPLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
 playerTPLayout.Parent = playerTPScroll
 
-
-
 addPadding(playerTPScroll, 4, 4, 4, 8)
-
-
-
-------------------------------------------------------------------
-------------------------------------------------------------------
--- PANEL ANIMATIONS: 0.45 s in, 0.40 s out
-------------------------------------------------------------------
 
 local PANEL_OPEN_INFO = TweenInfo.new(0.45, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local PANEL_CLOSE_INFO = TweenInfo.new(0.40, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
@@ -1764,55 +919,22 @@ local function toggleGuiVisibility()
     end
 end
 
-
--- CHARACTER
-
-------------------------------------------------------------------
-
-
-
 local function getCharacterParts()
-
     Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
     Humanoid = Character:FindFirstChildOfClass("Humanoid")
-
     HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-
 end
-
-
 
 local function isCharacterReady()
-
     return Character
-
         and Character.Parent
-
         and Humanoid
-
         and Humanoid.Parent
-
         and HumanoidRootPart
-
         and HumanoidRootPart.Parent
-
 end
 
-
-
-------------------------------------------------------------------
-
--- MOVEMENT
-
-------------------------------------------------------------------
-
-
-
 registerPanelEmotes = function(emote)
-    -- GetAppliedDescription() returns a copy, so changing it does not register new emotes
-    -- on the live Humanoid. Only use PlayEmoteAsync when this exact asset is already
-    -- present in the currently applied description; otherwise load the animation directly.
     if not Humanoid or not Humanoid.Parent then
         return nil
     end
@@ -1870,8 +992,6 @@ playPanelEmote = function(emote)
         end
     end
 
-    -- Direct Animation loading is the fallback for catalog animation assets.
-    -- Roblox still enforces experience/asset permissions and rig compatibility.
     local animator = Humanoid:FindFirstChildOfClass("Animator")
     if not animator then
         animator = Humanoid:WaitForChild("Animator", 3)
@@ -1900,977 +1020,460 @@ playPanelEmote = function(emote)
     track:Play(0.15, 1, 1)
 end
 
-
 local function snapshotGameMovementValues()
-
     if not isCharacterReady() then
-
         return
-
     end
-
-
 
     gameWalkSpeed = Humanoid.WalkSpeed
-
     gameJumpPower = Humanoid.JumpPower
-
     gameUseJumpPower = Humanoid.UseJumpPower
-
 end
-
-
 
 local function applyWalkSpeed()
-
     if not isCharacterReady() then
-
         return
-
     end
-
-
 
     if state.WalkSpeedEnabled then
-
         Humanoid.WalkSpeed = state.WalkSpeed
-
     else
-
         Humanoid.WalkSpeed = gameWalkSpeed
-
     end
-
 end
-
-
 
 local function setWalkSpeed(value)
-
     value = tonumber(value)
-
-
-
     if not value then
-
         walkSpeedInput.Text = tostring(state.WalkSpeed)
-
         return
-
     end
-
-
 
     value = math.clamp(value, CONFIG.WalkSpeed.Min, CONFIG.WalkSpeed.Max)
-
     state.WalkSpeed = value
-
     walkSpeedInput.Text = tostring(value)
-
     applyWalkSpeed()
-
 end
-
-
 
 local function applyJumpPower()
-
     if not isCharacterReady() then
-
         return
-
     end
-
-
 
     if state.JumpPowerEnabled then
-
         Humanoid.UseJumpPower = true
-
         Humanoid.JumpPower = state.JumpPower
-
     else
-
         Humanoid.UseJumpPower = gameUseJumpPower
-
         Humanoid.JumpPower = gameJumpPower
-
     end
-
 end
-
-
 
 local function setJumpPower(value)
-
     value = tonumber(value)
-
-
-
     if not value then
-
         jumpPowerInput.Text = tostring(state.JumpPower)
-
         return
-
     end
-
-
-
+    
     value = math.clamp(value, CONFIG.JumpPower.Min, CONFIG.JumpPower.Max)
-
     state.JumpPower = value
-
     jumpPowerInput.Text = tostring(value)
-
     applyJumpPower()
-
 end
-
-
 
 local function setFlySpeed(value)
-
     value = tonumber(value)
-
-
-
     if not value then
-
         flySpeedInput.Text = tostring(state.FlySpeed)
-
         return
-
     end
-
-
 
     value = math.clamp(value, CONFIG.Fly.MinSpeed, CONFIG.Fly.MaxSpeed)
-
     state.FlySpeed = value
-
     flySpeedInput.Text = tostring(value)
-
 end
-
-
 
 addConnection(walkSpeedInput.FocusLost:Connect(function()
-
     safeCall("WalkSpeed input", setWalkSpeed, walkSpeedInput.Text)
-
 end))
-
-
 
 addConnection(jumpPowerInput.FocusLost:Connect(function()
-
     safeCall("JumpPower input", setJumpPower, jumpPowerInput.Text)
-
 end))
-
-
 
 addConnection(flySpeedInput.FocusLost:Connect(function()
-
     safeCall("FlySpeed input", setFlySpeed, flySpeedInput.Text)
-
 end))
-
-
 
 addConnection(walkSpeedToggle.MouseButton1Click:Connect(function()
-
     safeCall("toggle WalkSpeed", function()
-
         state.WalkSpeedEnabled = not state.WalkSpeedEnabled
-
         setButtonState(walkSpeedToggle, state.WalkSpeedEnabled, "WalkSpeed: " .. (state.WalkSpeedEnabled and "ON" or "OFF"))
-
         applyWalkSpeed()
-
     end)
-
 end))
-
-
 
 addConnection(jumpPowerToggle.MouseButton1Click:Connect(function()
-
     safeCall("toggle JumpPower", function()
-
         state.JumpPowerEnabled = not state.JumpPowerEnabled
-
         setButtonState(jumpPowerToggle, state.JumpPowerEnabled, "JumpPower: " .. (state.JumpPowerEnabled and "ON" or "OFF"))
-
         applyJumpPower()
-
     end)
-
 end))
-
-
-
-------------------------------------------------------------------
-
--- INFINITE JUMP
-
-------------------------------------------------------------------
-
-
 
 local function setInfiniteJump(enabled)
-
     state.InfiniteJump = enabled
-
     setButtonState(infiniteJumpButton, enabled, "Inf. Jump: " .. (enabled and "ON" or "OFF"))
-
 end
 
-
-
 addConnection(UserInputService.JumpRequest:Connect(function()
-
     if not state.InfiniteJump or not isCharacterReady() then
-
         return
-
     end
 
-
-
     safeCall("Infinite Jump", function()
-
         Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-
     end)
-
 end))
-
-
 
 addConnection(infiniteJumpButton.MouseButton1Click:Connect(function()
-
     setInfiniteJump(not state.InfiniteJump)
-
 end))
-
-
-
-------------------------------------------------------------------
-
--- BHOP
-
-------------------------------------------------------------------
-
-
 
 local lastBhopTime = 0
 
-
-
 local function setBhop(enabled)
-
     state.Bhop = enabled
-
     setButtonState(bhopButton, enabled, "Bhop: " .. (enabled and "ON" or "OFF"))
-
 end
 
-
-
 addConnection(bhopButton.MouseButton1Click:Connect(function()
-
     safeCall("toggle Bhop", function()
-
         setBhop(not state.Bhop)
-
     end)
-
 end))
-
-
-
-------------------------------------------------------------------
-
--- NOCLIP
-
-------------------------------------------------------------------
-
-
 
 local noclipOriginal = {}
 
-
-
 local function applyNoclipToCharacter()
-
     if not isCharacterReady() then
-
         return
-
     end
-
-
-
     for _, instance in ipairs(Character:GetDescendants()) do
-
         if instance:IsA("BasePart") then
-
             if noclipOriginal[instance] == nil then
-
                 noclipOriginal[instance] = instance.CanCollide
-
             end
 
-
-
             instance.CanCollide = false
-
         end
-
     end
-
 end
-
-
 
 local function stopNoclip()
-
     for instance, originalValue in pairs(noclipOriginal) do
-
         if instance and instance.Parent then
-
             instance.CanCollide = originalValue
-
         end
-
     end
-
-
 
     table.clear(noclipOriginal)
-
 end
-
-
 
 local function setNoclip(enabled)
-
     state.Noclip = enabled
-
-
-
     if enabled then
-
         applyNoclipToCharacter()
-
     else
-
         stopNoclip()
-
     end
-
-
 
     setButtonState(noclipButton, enabled, "Noclip: " .. (enabled and "ON" or "OFF"))
-
 end
 
-
-
 addConnection(noclipButton.MouseButton1Click:Connect(function()
-
     safeCall("toggle Noclip", function()
-
         setNoclip(not state.Noclip)
-
     end)
-
 end))
 
-
-
-------------------------------------------------------------------
-
--- FLY
-
-------------------------------------------------------------------
-
-
-
 local flyAttachment
-
 local flyVelocity
-
 local flyOrientation
-
 local flyOldAutoRotate
-
 local flyOldPlatformStand
-
 local flyControllerRoot
-
 local flyVehicleMode = false
 
-
-
 local function getVehicleControllerRoot()
-
     if not Humanoid or not Humanoid.Parent then
-
         return nil
-
     end
-
-
 
     local seatPart = Humanoid.SeatPart
 
-
-
     if not seatPart or not seatPart:IsA("BasePart") then
-
         return nil
-
     end
-
-
 
     local root = seatPart.AssemblyRootPart
 
-
-
     if not root or not root.Parent then
-
         return nil
-
     end
-
-
-
-    -- The character's own root is not a vehicle assembly.
 
     if root == HumanoidRootPart then
-
         return nil
-
     end
-
-
-
-    -- Anchored assemblies cannot be controlled by physics constraints.
 
     if root.Anchored then
-
         return nil
-
     end
-
-
-
+    
     return root
-
 end
-
-
 
 local function destroyFlyControllers()
-
     if flyVelocity then
-
         safeCall("destroy fly velocity", function()
-
             flyVelocity:Destroy()
-
         end)
-
         flyVelocity = nil
-
     end
-
-
 
     if flyOrientation then
-
         safeCall("destroy fly orientation", function()
-
             flyOrientation:Destroy()
-
         end)
-
         flyOrientation = nil
-
     end
-
-
-
     if flyAttachment then
-
         safeCall("destroy fly attachment", function()
-
             flyAttachment:Destroy()
-
         end)
-
         flyAttachment = nil
-
     end
-
-
 
     flyControllerRoot = nil
-
     flyVehicleMode = false
-
 end
-
-
 
 local function createFlyControllers(root, vehicleMode)
-
     if not root or not root.Parent then
-
         return false
-
     end
-
-
 
     if root.Anchored then
-
         return false
-
     end
-
-
-
+    
     destroyFlyControllers()
-
-
 
     flyControllerRoot = root
-
     flyVehicleMode = vehicleMode
-
-
-
     flyAttachment = Instance.new("Attachment")
-
     flyAttachment.Name = "MegaPanelV13_FlyAttachment"
-
     flyAttachment.Parent = root
 
-
-
     flyVelocity = Instance.new("LinearVelocity")
-
     flyVelocity.Name = "MegaPanelV13_LinearVelocity"
-
     flyVelocity.Attachment0 = flyAttachment
-
     flyVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
-
     flyVelocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
-
     flyVelocity.ForceLimitsEnabled = false
-
     flyVelocity.VectorVelocity = Vector3.zero
-
     flyVelocity.Parent = root
 
-
-
     flyOrientation = Instance.new("AlignOrientation")
-
     flyOrientation.Name = "MegaPanelV13_AlignOrientation"
-
     flyOrientation.Attachment0 = flyAttachment
-
     flyOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
-
     flyOrientation.RigidityEnabled = true
-
     flyOrientation.Responsiveness = 200
-
     flyOrientation.MaxTorque = math.huge
-
     flyOrientation.Parent = root
 
-
-
     return true
-
 end
-
-
 
 local function stopFlying()
-
     state.Flying = false
-
-
-
     destroyFlyControllers()
 
-
-
     if Humanoid and Humanoid.Parent then
-
         if flyOldAutoRotate ~= nil then
-
             Humanoid.AutoRotate = flyOldAutoRotate
-
         else
-
             Humanoid.AutoRotate = true
-
         end
-
-
 
         if flyOldPlatformStand ~= nil then
-
             Humanoid.PlatformStand = flyOldPlatformStand
-
         else
-
             Humanoid.PlatformStand = false
-
         end
-
-
 
         applyWalkSpeed()
-
     end
-
-
 
     flyOldAutoRotate = nil
-
     flyOldPlatformStand = nil
 
-
-
     setButtonState(flyButton, false, "Flying: OFF")
-
 end
-
-
 
 local function startFlying()
-
     if not isCharacterReady() then
-
         return
-
     end
-
-
-
-    -- If already flying, rebuild the controllers against the current assembly.
 
     if state.Flying then
-
         local vehicleRoot = getVehicleControllerRoot()
 
-
-
         if flyVehicleMode and vehicleRoot and vehicleRoot ~= flyControllerRoot then
-
             if not createFlyControllers(vehicleRoot, true) then
-
                 stopFlying()
-
             end
-
+            
         elseif not flyVehicleMode and not vehicleRoot and flyControllerRoot ~= HumanoidRootPart then
-
             if not createFlyControllers(HumanoidRootPart, false) then
-
                 stopFlying()
-
             end
-
         end
 
-
-
         return
-
     end
-
-
 
     state.Flying = true
-
     flyOldAutoRotate = Humanoid.AutoRotate
-
     flyOldPlatformStand = Humanoid.PlatformStand
 
-
-
     local vehicleRoot = getVehicleControllerRoot()
 
-
-
     if vehicleRoot then
-
-        -- Vehicle mode: keep the Humanoid seated. Do NOT use PlatformStand,
-
-        -- because that would fight the seat/vehicle state and can eject the driver.
-
         Humanoid.AutoRotate = false
-
-
 
         if not createFlyControllers(vehicleRoot, true) then
-
             state.Flying = false
-
             Humanoid.AutoRotate = flyOldAutoRotate
-
             flyOldAutoRotate = nil
-
             flyOldPlatformStand = nil
-
             return
-
         end
-
     else
 
-        -- Character mode: suppress normal character movement so W/A/S/D is
-
-        -- handled by exactly one movement system.
-
         Humanoid.AutoRotate = false
-
         Humanoid.PlatformStand = true
 
-
-
         if not createFlyControllers(HumanoidRootPart, false) then
-
             state.Flying = false
-
             Humanoid.AutoRotate = flyOldAutoRotate
-
             Humanoid.PlatformStand = flyOldPlatformStand
-
             flyOldAutoRotate = nil
-
             flyOldPlatformStand = nil
-
             return
-
         end
-
     end
-
-
 
     setButtonState(flyButton, true, "Flying: ON")
-
 end
 
-
-
 local function updateFlyControllerMode()
-
     if not state.Flying or not isCharacterReady() then
-
         return
-
     end
-
-
 
     local vehicleRoot = getVehicleControllerRoot()
 
-
-
     if vehicleRoot then
-
         if not flyVehicleMode or flyControllerRoot ~= vehicleRoot then
-
             if Humanoid then
-
                 Humanoid.PlatformStand = false
-
                 Humanoid.AutoRotate = false
-
             end
-
-
 
             createFlyControllers(vehicleRoot, true)
-
         end
-
     else
-
         if flyVehicleMode then
-
             destroyFlyControllers()
-
-
-
+            
             if Humanoid then
-
                 Humanoid.AutoRotate = false
-
                 Humanoid.PlatformStand = true
-
             end
 
-
-
             createFlyControllers(HumanoidRootPart, false)
-
         end
-
     end
-
 end
 
-
-
 local function updateFly()
-
     if not state.Flying then
-
         return
-
     end
-
-
 
     if not isCharacterReady() then
-
         return
-
     end
-
-
-
-    -- Critical chat fix: no fly input while the player is typing.
 
     if UserInputService:GetFocusedTextBox() then
-
         if flyVelocity then
-
             flyVelocity.VectorVelocity = Vector3.zero
-
         end
-
         return
-
     end
-
-
 
     updateFlyControllerMode()
 
-
-
     if not flyVelocity or not flyOrientation or not flyControllerRoot then
-
         return
-
     end
-
-
 
     local camera = workspace.CurrentCamera
 
-
-
     if not camera then
-
         return
-
     end
-
-
 
     local movement = Vector3.zero
-
     local forward = camera.CFrame.LookVector
-
     local right = camera.CFrame.RightVector
-
     local up = Vector3.yAxis
 
-
-
     if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-
         movement += forward
-
     end
-
-
 
     if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-
         movement -= forward
-
     end
-
-
 
     if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-
         movement += right
-
     end
-
-
 
     if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-
         movement -= right
-
     end
-
-
 
     if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-
         movement += up
-
     end
-
-
-
-    -- C belongs exclusively to Next Target. Fly down = LeftControl.
 
     if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-
         movement -= up
-
     end
-
-
 
     if movement.Magnitude > 0 then
-
         movement = movement.Unit * state.FlySpeed
-
     end
 
-
-
     safeCall("update fly velocity", function()
-
         if flyVelocity and flyVelocity.Parent then
-
             flyVelocity.VectorVelocity = movement
-
         end
-
     end)
 
 
