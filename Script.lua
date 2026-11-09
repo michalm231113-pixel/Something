@@ -1285,9 +1285,6 @@ addConnection(flyButton.MouseButton1Click:Connect(function()
         end
     end)
 end))
-------------------------------------------------------------------
--- FULL BRIGHT
-------------------------------------------------------------------
 local originalLighting
 local lastFullBrightUpdate = 0
 local function startFullBright()
@@ -1344,9 +1341,6 @@ addConnection(fullBrightButton.MouseButton1Click:Connect(function()
         setFullBright(not state.FullBright)
     end)
 end))
-------------------------------------------------------------------
--- HIGHLIGHT SYSTEM
-------------------------------------------------------------------
 local highlightFolder = Instance.new("Folder")
 highlightFolder.Name = "MegaPanelV13_Highlights"
 highlightFolder.Parent = workspace
@@ -1482,8 +1476,6 @@ local function createOrUpdateHighlight(player)
         return
     end
     if not character or not humanoid or humanoid.Health <= 0 or not head then
-        -- Destroy invalid Highlight instances rather than merely disabling them:
-        -- disabled instances still count toward Roblox's client Highlight limit.
         if info.highlight then
             safeCall("release invalid highlight", function()
                 info.highlight:Destroy()
@@ -1595,9 +1587,6 @@ addConnection(highlightButton.MouseButton1Click:Connect(function()
         setHighlight(not state.Highlight)
     end)
 end))
-------------------------------------------------------------------
--- PLAYER EVENTS FOR HIGHLIGHTS
-------------------------------------------------------------------
 local function hookPlayerHighlightEvents(player)
     if player == LocalPlayer then
         return
@@ -1626,9 +1615,6 @@ end))
 for _, player in ipairs(Players:GetPlayers()) do
     hookPlayerHighlightEvents(player)
 end
-------------------------------------------------------------------
--- AIMBOT TARGET LIST
-------------------------------------------------------------------
 local function isValidAimbotTarget(player)
     if player == nil or player == LocalPlayer then
         return false
@@ -1639,17 +1625,12 @@ local function isValidAimbotTarget(player)
     if not isAlive(player) then
         return false
     end
-    -- FFA:
-    -- LocalPlayer has no Team, so every other alive player is a valid enemy.
     if LocalPlayer.Team == nil then
         return true
     end
-    -- Team mode:
-    -- Players on the same Team are NEVER valid aimbot targets.
     if player.Team == LocalPlayer.Team then
         return false
     end
-    -- Different Team = opponent.
     return true
 end
 local function getValidTargets()
@@ -1727,9 +1708,6 @@ local function nextTarget()
     state.TargetIndex = currentPosition
     setCurrentTarget(targets[currentPosition])
 end
-------------------------------------------------------------------
--- AIMBOT
-------------------------------------------------------------------
 local function setAimbot(enabled)
     state.Aimbot = enabled
     if enabled then
@@ -1748,7 +1726,6 @@ local function updateAimbot(deltaTime)
     if not state.Aimbot or not isCharacterReady() then
         return
     end
-    -- Keep text entry usable; do not hijack the camera while chatting.
     if UserInputService:GetFocusedTextBox() then
         return
     end
@@ -1766,8 +1743,6 @@ local function updateAimbot(deltaTime)
     if not targetHead or not camera then
         return
     end
-    -- CFrame.lookAt builds the correct 3D orientation from the camera-to-head vector.
-    -- Smoothness is normalized to frame time, so 30 FPS and 144 FPS feel similar.
     local origin = camera.CFrame.Position
     local direction = targetHead.Position - origin
     if direction.Magnitude < 0.001 then
@@ -1784,9 +1759,6 @@ addConnection(aimbotButton.MouseButton1Click:Connect(function()
         setAimbot(not state.Aimbot)
     end)
 end))
-------------------------------------------------------------------
--- PLAYER TP
-------------------------------------------------------------------
 local function createPlayerTPButton(player)
     if player == LocalPlayer then
         return
@@ -1860,9 +1832,6 @@ end))
 addConnection(localPlayerButton.MouseButton1Click:Connect(function()
     togglePanel(localFrame)
 end))
-------------------------------------------------------------------
--- CLICK TP
-------------------------------------------------------------------
 local mouse = LocalPlayer:GetMouse()
 local function mouseIsOverOurGui()
     local guiObjects = PlayerGui:GetGuiObjectsAtPosition(mouse.X, mouse.Y)
@@ -1899,9 +1868,6 @@ addConnection(clickTPButton.MouseButton1Click:Connect(function()
         setClickTP(not state.ClickTP)
     end)
 end))
-------------------------------------------------------------------
--- ANTI AFK
-------------------------------------------------------------------
 local antiAFKConnection
 local function stopAntiAFK()
     state.AntiAFK = false
@@ -1941,9 +1907,6 @@ addConnection(antiAFKButton.MouseButton1Click:Connect(function()
         setAntiAFK(not state.AntiAFK)
     end)
 end))
-------------------------------------------------------------------
--- DRAGGING
-------------------------------------------------------------------
 local function makeDraggable(handle, target)
     local dragging = false
     local dragStart
@@ -1987,9 +1950,6 @@ end
 makeDraggable(title, mainFrame)
 makeDraggable(localTitle, localFrame)
 makeDraggable(playerTPTitle, playerTPFrame)
-------------------------------------------------------------------
--- MOVEMENT WATCHERS
-------------------------------------------------------------------
 local function setupMovementWatchers()
     if not Humanoid then
         return
@@ -2013,15 +1973,10 @@ local function setupMovementWatchers()
     addConnection(walkSpeedChangedConnection)
     addConnection(jumpPowerChangedConnection)
 end
-------------------------------------------------------------------
--- CHARACTER SETUP
-------------------------------------------------------------------
 local function setupCharacter(newCharacter)
     Character = newCharacter
     Humanoid = Character:WaitForChild("Humanoid")
     HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-    -- Vehicle fly controllers are tied to the old physics assembly.
-    -- They will be rebuilt by updateFlyControllerMode when needed.
     if state.Flying then
         destroyFlyControllers()
     end
@@ -2078,9 +2033,6 @@ addConnection(LocalPlayer.CharacterAdded:Connect(function(newCharacter)
         end
     end)
 end))
-------------------------------------------------------------------
--- GLOBAL RENDER STEP
-------------------------------------------------------------------
 local lastNoclipUpdate = 0
 local fpsFrames = 0
 local fpsTimer = 0
@@ -2092,9 +2044,6 @@ RunService:BindToRenderStep(
         if not gui.Parent then
             return
         end
-        ------------------------------------------------------------
-        -- PERFORMANCE
-        ------------------------------------------------------------
         fpsFrames += 1
         fpsTimer += deltaTime
         pingTimer += deltaTime
@@ -2114,35 +2063,17 @@ RunService:BindToRenderStep(
                 end
             end)
         end
-        ------------------------------------------------------------
-        -- FLY
-        ------------------------------------------------------------
         updateFly()
-        ------------------------------------------------------------
-        -- AIMBOT
-        ------------------------------------------------------------
         updateAimbot(deltaTime)
-        ------------------------------------------------------------
-        -- HIGHLIGHTS
-        ------------------------------------------------------------
         if state.Highlight then
             refreshHighlights(false)
             updateHighlightInfo(false)
         end
-        ------------------------------------------------------------
-        -- FULLBRIGHT
-        ------------------------------------------------------------
         updateFullBright()
-        ------------------------------------------------------------
-        -- NOCLIP
-        ------------------------------------------------------------
         if state.Noclip and os.clock() - lastNoclipUpdate >= CONFIG.Noclip.RefreshInterval then
             lastNoclipUpdate = os.clock()
             applyNoclipToCharacter()
         end
-        ------------------------------------------------------------
-        -- BHOP
-        ------------------------------------------------------------
         if state.Bhop
             and isCharacterReady()
             and os.clock() - lastBhopTime >= CONFIG.Bhop.Interval
@@ -2151,9 +2082,6 @@ RunService:BindToRenderStep(
             Humanoid.Jump = true
             Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
-        ------------------------------------------------------------
-        -- MOVEMENT VALUES
-        ------------------------------------------------------------
         if isCharacterReady() then
             if state.WalkSpeedEnabled and not state.Flying then
                 Humanoid.WalkSpeed = state.WalkSpeed
@@ -2165,9 +2093,6 @@ RunService:BindToRenderStep(
         end
     end
 )
-------------------------------------------------------------------
--- KEYBOARD ACTIONS
-------------------------------------------------------------------
 local function bindKey(actionName, keyCode, callback)
     if not keyCode then
         return
@@ -2182,7 +2107,6 @@ local function bindKey(actionName, keyCode, callback)
             if inputState ~= Enum.UserInputState.Begin then
                 return Enum.ContextActionResult.Pass
             end
-            -- Do not use feature hotkeys while typing. F1 stays available.
             if keyCode ~= CONFIG.FeatureKeys.ToggleGui
                 and UserInputService:GetFocusedTextBox() then
                 return Enum.ContextActionResult.Pass
@@ -2239,20 +2163,11 @@ end)
 bindKey("MegaPanelV13_LocalPlayer", CONFIG.FeatureKeys.LocalPlayer, function()
     togglePanel(localFrame)
 end)
-------------------------------------------------------------------
--- INITIAL CHARACTER
-------------------------------------------------------------------
 getCharacterParts()
 snapshotGameMovementValues()
 setupCharacter(Character)
 setupMovementWatchers()
-------------------------------------------------------------------
--- INITIAL HIGHLIGHTS
-------------------------------------------------------------------
 safeCall("initial highlight refresh", refreshHighlights)
-------------------------------------------------------------------
--- INITIAL UI STATES
-------------------------------------------------------------------
 setButtonState(infiniteJumpButton, state.InfiniteJump, "Inf. Jump: " .. (state.InfiniteJump and "ON" or "OFF"))
 setButtonState(flyButton, state.Flying, "Flying: " .. (state.Flying and "ON" or "OFF"))
 setButtonState(aimbotButton, state.Aimbot, "Aimbot: " .. (state.Aimbot and "ON" or "OFF"))
@@ -2264,9 +2179,6 @@ setButtonState(jumpPowerToggle, state.JumpPowerEnabled, "JumpPower: " .. (state.
 setButtonState(antiAFKButton, state.AntiAFK, "AntiAFK: " .. (state.AntiAFK and "ON" or "OFF"))
 setButtonState(clickTPButton, state.ClickTP, "Click TP: " .. (state.ClickTP and "ON" or "OFF"))
 setButtonState(fullBrightButton, state.FullBright, "FullBright: " .. (state.FullBright and "ON" or "OFF"))
-------------------------------------------------------------------
--- CLOSE / CLEANUP
-------------------------------------------------------------------
 local function cleanup()
     if destroyed then
         return
@@ -2345,9 +2257,6 @@ addConnection(closeButton.MouseButton1Click:Connect(function()
     end
     task.delay(0.42, cleanup)
 end))
-------------------------------------------------------------------
--- FINAL
-------------------------------------------------------------------
 print("[MegaPanel V14 Cosmic] loaded successfully.")
 print("[MegaPanel V14 Cosmic] F1 = GUI")
 print("[MegaPanel V14 Cosmic] X = Aimbot")
