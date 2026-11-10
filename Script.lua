@@ -225,6 +225,24 @@ if existingShutdownFunction then
         existingShutdownFunction:Destroy()
     end
 end
+RunService:UnbindFromRenderStep("MegaPanelV13_Render")
+for _, actionName in ipairs({
+    "MegaPanelV13_ToggleGui",
+    "MegaPanelV13_Fly",
+    "MegaPanelV13_InfiniteJump",
+    "MegaPanelV13_Noclip",
+    "MegaPanelV13_Bhop",
+    "MegaPanelV13_Aimbot",
+    "MegaPanelV13_NextTarget",
+    "MegaPanelV13_Highlight",
+    "MegaPanelV13_AFKAlert",
+    "MegaPanelV13_FullBright",
+    "MegaPanelV13_ClickTP",
+    "MegaPanelV13_PlayerTP",
+    "MegaPanelV13_LocalPlayer",
+}) do
+    ContextActionService:UnbindAction(actionName)
+end
 local existingGui = PlayerGui:FindFirstChild("MegaPanelV13")
 if existingGui then
     safeCall("destroy old GUI", function()
@@ -1816,14 +1834,13 @@ local function updateAimbot(deltaTime)
     if not target then
         return
     end
-    local targetCharacter = target.Character
-    local targetHead = targetCharacter and targetCharacter:FindFirstChild("Head")
+    local targetPart = getTargetPart(target)
     local camera = workspace.CurrentCamera
-    if not targetHead or not camera then
+    if not targetPart or not camera then
         return
     end
     local origin = camera.CFrame.Position
-    local direction = targetHead.Position - origin
+    local direction = targetPart.Position - origin
     if direction.Magnitude < 0.001 then
         return
     end
