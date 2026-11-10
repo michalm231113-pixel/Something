@@ -129,6 +129,7 @@ local PlayerConnections = {}
 local InstanceConnections = {}
 local ActionNames = {}
 local destroyed = false
+local shutdownFunction
 local function addConnection(connection)
     if connection then
         table.insert(Connections, connection)
@@ -212,6 +213,17 @@ local function cleanupConnections()
 
     table.clear(PlayerConnections)
     table.clear(InstanceConnections)
+end
+local existingShutdownFunction = PlayerGui:FindFirstChild("MegaPanelV13_Shutdown")
+if existingShutdownFunction then
+    if existingShutdownFunction:IsA("BindableFunction") then
+        safeCall("cleanup previous panel instance", function()
+            existingShutdownFunction:Invoke()
+        end)
+    end
+    if existingShutdownFunction.Parent then
+        existingShutdownFunction:Destroy()
+    end
 end
 local existingGui = PlayerGui:FindFirstChild("MegaPanelV13")
 if existingGui then
@@ -2316,7 +2328,23 @@ local function cleanup()
             gui:Destroy()
         end)
     end
+    if shutdownFunction then
+        local oldShutdownFunction = shutdownFunction
+        shutdownFunction = nil
+        task.defer(function()
+            if oldShutdownFunction.Parent then
+                oldShutdownFunction:Destroy()
+            end
+        end)
+    end
 end
+shutdownFunction = Instance.new("BindableFunction")
+shutdownFunction.Name = "MegaPanelV13_Shutdown"
+shutdownFunction.OnInvoke = function()
+    cleanup()
+    return true
+end
+shutdownFunction.Parent = PlayerGui
 addConnection(closeButton.MouseButton1Click:Connect(function()
     guiVisible = false
     animatePanel(mainFrame, false)
