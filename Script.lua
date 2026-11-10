@@ -4,7 +4,6 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ContextActionService = game:GetService("ContextActionService")
-local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local milion = 1000000
@@ -127,6 +126,7 @@ local walkSpeedChangedConnection
 local jumpPowerChangedConnection
 local Connections = {}
 local PlayerConnections = {}
+local InstanceConnections = {}
 local ActionNames = {}
 local destroyed = false
 local function addConnection(connection)
@@ -149,6 +149,32 @@ local function disconnectConnection(connection)
             table.remove(Connections, index)
         end
     end
+end
+local function addInstanceConnection(instance, connection)
+    if not instance or not connection then
+        return connection
+    end
+
+    local instanceList = InstanceConnections[instance]
+    if not instanceList then
+        instanceList = {}
+        InstanceConnections[instance] = instanceList
+    end
+
+    table.insert(instanceList, connection)
+    return addConnection(connection)
+end
+local function disconnectInstanceConnections(instance)
+    local instanceList = InstanceConnections[instance]
+    if not instanceList then
+        return
+    end
+
+    for index = #instanceList, 1, -1 do
+        disconnectConnection(instanceList[index])
+    end
+
+    InstanceConnections[instance] = nil
 end
 local function addPlayerConnection(player, connection)
     if not player or not connection then
@@ -185,6 +211,7 @@ local function cleanupConnections()
     end
 
     table.clear(PlayerConnections)
+    table.clear(InstanceConnections)
 end
 local existingGui = PlayerGui:FindFirstChild("MegaPanelV13")
 if existingGui then
@@ -576,7 +603,7 @@ separator.ZIndex = 903
 separator.Parent = separatorSlot
 localButtonCount += 1
 local flySpeedInput = createNumberBox("FlySpeed", state.FlySpeed)
-local antiAFKButton = createLocalButton("AntiAFK: OFF", CONFIG.FeatureKeys.AntiAFK)
+local antiAFKButton = createLocalButton("AFK Alert: OFF", CONFIG.FeatureKeys.AntiAFK)
 local clickTPButton = createLocalButton("Click TP: OFF", CONFIG.FeatureKeys.ClickTP)
 local fullBrightButton = createLocalButton("FullBright: OFF", CONFIG.FeatureKeys.FullBright)
 local performanceHeader = Instance.new("TextLabel")
@@ -1819,13 +1846,13 @@ local function createPlayerTPButton(player)
     button.Parent = playerTPScroll
     addCorner(button, 7)
     addStroke(button, Color3.fromRGB(255, 255, 255), 0.72, 1)
-    addConnection(button.MouseEnter:Connect(function()
+    addInstanceConnection(button, button.MouseEnter:Connect(function()
         button.BackgroundColor3 = CONFIG.UI.ButtonHover
     end))
-    addConnection(button.MouseLeave:Connect(function()
+    addInstanceConnection(button, button.MouseLeave:Connect(function()
         button.BackgroundColor3 = CONFIG.UI.Button
     end))
-    addConnection(button.MouseButton1Click:Connect(function()
+    addInstanceConnection(button, button.MouseButton1Click:Connect(function()
         safeCall("teleport to " .. player.Name, function()
             if not isCharacterReady() then
                 return
@@ -1848,6 +1875,7 @@ end
 local function updatePlayerTPList()
     for _, child in ipairs(playerTPScroll:GetChildren()) do
         if child:IsA("TextButton") then
+            disconnectInstanceConnections(child)
             child:Destroy()
         end
     end
@@ -1915,7 +1943,7 @@ local function stopAntiAFK()
         disconnectConnection(antiAFKConnection)
         antiAFKConnection = nil
     end
-    setButtonState(antiAFKButton, false, "AntiAFK: OFF")
+    setButtonState(antiAFKButton, false, "AFK Alert: OFF")
 end
 local function startAntiAFK()
     if antiAFKConnection then
@@ -1923,17 +1951,16 @@ local function startAntiAFK()
         antiAFKConnection = nil
     end
     state.AntiAFK = true
-    antiAFKConnection = LocalPlayer.Idled:Connect(function()
+    antiAFKConnection = LocalPlayer.Idled:Connect(function(idleTime)
         if not state.AntiAFK or destroyed then
             return
         end
-        safeCall("AntiAFK idle input", function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new(0, 0))
-        end)
+        warn(("[MegaPanel V14] AFK detected after %.0f seconds. Roblox may disconnect idle players automatically.")
+            :format(idleTime or 0))
+        stopAntiAFK()
     end)
     addConnection(antiAFKConnection)
-    setButtonState(antiAFKButton, true, "AntiAFK: ON")
+    setButtonState(antiAFKButton, true, "AFK Alert: ON")
 end
 local function setAntiAFK(enabled)
     if enabled then
@@ -1943,7 +1970,7 @@ local function setAntiAFK(enabled)
     end
 end
 addConnection(antiAFKButton.MouseButton1Click:Connect(function()
-    safeCall("toggle AntiAFK", function()
+    safeCall("toggle AFK Alert", function()
         setAntiAFK(not state.AntiAFK)
     end)
 end))
@@ -1961,12 +1988,16 @@ local function makeDraggable(handle, target)
         dragStart = input.Position
         startPosition = target.Position
         activeInput = input
-        addConnection(input.Changed:Connect(function()
+        local changedConnection
+        changedConnection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
                 activeInput = nil
+                disconnectConnection(changedConnection)
+                changedConnection = nil
             end
-        end))
+        end)
+        addConnection(changedConnection)
     end))
     addConnection(handle.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement
@@ -2188,7 +2219,7 @@ end)
 bindKey("MegaPanelV13_Highlight", CONFIG.FeatureKeys.Highlight, function()
     setHighlight(not state.Highlight)
 end)
-bindKey("MegaPanelV13_AntiAFK", CONFIG.FeatureKeys.AntiAFK, function()
+bindKey("MegaPanelV13_AFKAlert", CONFIG.FeatureKeys.AntiAFK, function()
     setAntiAFK(not state.AntiAFK)
 end)
 bindKey("MegaPanelV13_FullBright", CONFIG.FeatureKeys.FullBright, function()
@@ -2216,7 +2247,7 @@ setButtonState(bhopButton, state.Bhop, "Bhop: " .. (state.Bhop and "ON" or "OFF"
 setButtonState(highlightButton, state.Highlight, "Highlight: " .. (state.Highlight and "ON" or "OFF"))
 setButtonState(walkSpeedToggle, state.WalkSpeedEnabled, "WalkSpeed: " .. (state.WalkSpeedEnabled and "ON" or "OFF"))
 setButtonState(jumpPowerToggle, state.JumpPowerEnabled, "JumpPower: " .. (state.JumpPowerEnabled and "ON" or "OFF"))
-setButtonState(antiAFKButton, state.AntiAFK, "AntiAFK: " .. (state.AntiAFK and "ON" or "OFF"))
+setButtonState(antiAFKButton, state.AntiAFK, "AFK Alert: " .. (state.AntiAFK and "ON" or "OFF"))
 setButtonState(clickTPButton, state.ClickTP, "Click TP: " .. (state.ClickTP and "ON" or "OFF"))
 setButtonState(fullBrightButton, state.FullBright, "FullBright: " .. (state.FullBright and "ON" or "OFF"))
 local function cleanup()
