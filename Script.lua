@@ -52,6 +52,17 @@ local CONFIG = {
     Aimbot = {
         Smoothness = 0.35,
         TargetPart = "Head",
+        UseFOV = true,
+        ShowFOV = true,
+        FOVRadius = 190,
+        TargetPriority = "SCREEN",
+        RequireLineOfSight = true,
+        MinSmoothness = 0.05,
+        MaxSmoothness = 1,
+        SmoothnessStep = 0.05,
+        MinFOVRadius = 80,
+        MaxFOVRadius = 420,
+        FOVStep = 20,
     },
     Highlight = {
         FillTransparency = 0.55,
@@ -81,6 +92,7 @@ local CONFIG = {
         Bhop = Enum.KeyCode.B,
         Aimbot = Enum.KeyCode.X,
         NextTarget = Enum.KeyCode.C,
+        AimbotSettings = Enum.KeyCode.RightAlt,
         Highlight = Enum.KeyCode.H,
         AntiAFK = Enum.KeyCode.K,
         FullBright = Enum.KeyCode.J,
@@ -493,6 +505,7 @@ local bhopButton = createMainButton("Bhop: OFF", CONFIG.FeatureKeys.Bhop)
 local highlightButton = createMainButton("Highlight: ON", CONFIG.FeatureKeys.Highlight)
 local playerTPButton = createMainButton("Player TP", CONFIG.FeatureKeys.PlayerTP)
 local localPlayerButton = createMainButton("LocalPlayer", CONFIG.FeatureKeys.LocalPlayer)
+local aimLabButton = createMainButton("Aim Lab Settings", CONFIG.FeatureKeys.AimbotSettings)
 local noteLabel = Instance.new("TextLabel")
 noteLabel.Name = "Note"
 noteLabel.Size = UDim2.new(1, -24, 0, 50)
@@ -756,6 +769,208 @@ playerTPLayout.Padding = UDim.new(0, 6)
 playerTPLayout.SortOrder = Enum.SortOrder.LayoutOrder
 playerTPLayout.Parent = playerTPScroll
 addPadding(playerTPScroll, 4, 4, 4, 8)
+local aimLabFrame = Instance.new("Frame")
+aimLabFrame.Name = "AimLabPanel"
+aimLabFrame.Size = UDim2.fromOffset(292, 455)
+aimLabFrame.Position = UDim2.fromOffset(610, 120)
+aimLabFrame.BackgroundColor3 = CONFIG.UI.Panel
+aimLabFrame.BorderSizePixel = 0
+aimLabFrame.Visible = false
+aimLabFrame.ZIndex = 870
+aimLabFrame.Parent = gui
+addCorner(aimLabFrame, CONFIG.UI.CornerRadius)
+applySciFiSurface(aimLabFrame)
+
+local aimLabTitle = Instance.new("TextLabel")
+aimLabTitle.Name = "Title"
+aimLabTitle.Size = UDim2.new(1, -54, 0, 34)
+aimLabTitle.Position = UDim2.fromOffset(12, 8)
+aimLabTitle.BackgroundTransparency = 1
+aimLabTitle.Text = "AIM LAB // STUDIO"
+aimLabTitle.TextColor3 = CONFIG.UI.Orange
+aimLabTitle.TextSize = 18
+aimLabTitle.Font = Enum.Font.GothamBold
+aimLabTitle.TextXAlignment = Enum.TextXAlignment.Left
+aimLabTitle.ZIndex = 1001
+aimLabTitle.Parent = aimLabFrame
+
+local aimLabCloseButton = Instance.new("TextButton")
+aimLabCloseButton.Name = "Close"
+aimLabCloseButton.Size = UDim2.fromOffset(30, 30)
+aimLabCloseButton.Position = UDim2.new(1, -40, 0, 8)
+aimLabCloseButton.BackgroundColor3 = CONFIG.UI.Button
+aimLabCloseButton.BorderSizePixel = 0
+aimLabCloseButton.Text = "X"
+aimLabCloseButton.TextColor3 = CONFIG.UI.White
+aimLabCloseButton.TextSize = 14
+aimLabCloseButton.Font = Enum.Font.GothamBold
+aimLabCloseButton.ZIndex = 1002
+aimLabCloseButton.Parent = aimLabFrame
+addCorner(aimLabCloseButton, 7)
+addStroke(aimLabCloseButton, Color3.new(1, 1, 1), 0.55, 1)
+
+local aimLabStatus = Instance.new("TextLabel")
+aimLabStatus.Name = "ModeStatus"
+aimLabStatus.Size = UDim2.new(1, -24, 0, 26)
+aimLabStatus.Position = UDim2.fromOffset(12, 48)
+aimLabStatus.BackgroundColor3 = CONFIG.UI.Darker
+aimLabStatus.BorderSizePixel = 0
+aimLabStatus.Text = "STUDIO MODE • READY"
+aimLabStatus.TextColor3 = CONFIG.UI.Green
+aimLabStatus.TextSize = 11
+aimLabStatus.Font = Enum.Font.GothamBold
+aimLabStatus.ZIndex = 1001
+aimLabStatus.Parent = aimLabFrame
+addCorner(aimLabStatus, 6)
+addStroke(aimLabStatus, Color3.new(1, 1, 1), 0.8, 1)
+
+local aimLabTarget = Instance.new("TextLabel")
+aimLabTarget.Name = "TargetInfo"
+aimLabTarget.Size = UDim2.new(1, -24, 0, 38)
+aimLabTarget.Position = UDim2.fromOffset(12, 82)
+aimLabTarget.BackgroundColor3 = CONFIG.UI.Darker
+aimLabTarget.BorderSizePixel = 0
+aimLabTarget.Text = "TARGET: NONE"
+aimLabTarget.TextColor3 = CONFIG.UI.Gray
+aimLabTarget.TextSize = 12
+aimLabTarget.Font = Enum.Font.GothamBold
+aimLabTarget.TextXAlignment = Enum.TextXAlignment.Left
+aimLabTarget.ZIndex = 1001
+aimLabTarget.Parent = aimLabFrame
+addCorner(aimLabTarget, 6)
+addPadding(aimLabTarget, 10, 8, 0, 0)
+addStroke(aimLabTarget, Color3.new(1, 1, 1), 0.82, 1)
+
+local aimLabMasterButton, aimLabMasterText = createButton(aimLabFrame, "AIM ASSIST: OFF", nil)
+aimLabMasterButton.Name = "AimAssistToggle"
+aimLabMasterButton.Position = UDim2.fromOffset(12, 130)
+
+local aimLabFOVButton, aimLabFOVText = createButton(aimLabFrame, "FOV FILTER: ON", nil)
+aimLabFOVButton.Name = "FOVFilterToggle"
+aimLabFOVButton.Position = UDim2.fromOffset(12, 174)
+
+local aimLabPriorityButton, aimLabPriorityText = createButton(aimLabFrame, "PRIORITY: SCREEN CENTER", nil)
+aimLabPriorityButton.Name = "TargetPriorityToggle"
+aimLabPriorityButton.Position = UDim2.fromOffset(12, 218)
+
+local aimLabLineOfSightButton, aimLabLineOfSightText = createButton(aimLabFrame, "LINE OF SIGHT: ON", nil)
+aimLabLineOfSightButton.Name = "LineOfSightToggle"
+aimLabLineOfSightButton.Position = UDim2.fromOffset(12, 262)
+
+local function createAimLabValueLabel(name, text, position)
+    local label = Instance.new("TextLabel")
+    label.Name = name
+    label.Size = UDim2.fromOffset(142, 24)
+    label.Position = position
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = CONFIG.UI.White
+    label.TextSize = 11
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.ZIndex = 1002
+    label.Parent = aimLabFrame
+    return label
+end
+
+local function createAimLabStepButton(name, text, position)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.fromOffset(38, 30)
+    button.Position = position
+    button.BackgroundColor3 = CONFIG.UI.Button
+    button.BorderSizePixel = 0
+    button.AutoButtonColor = false
+    button.Text = text
+    button.TextColor3 = CONFIG.UI.White
+    button.TextSize = 18
+    button.Font = Enum.Font.GothamBold
+    button.ZIndex = 1002
+    button.Parent = aimLabFrame
+    addCorner(button, 6)
+    addStroke(button, Color3.new(1, 1, 1), 0.55, 1)
+    addConnection(button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.1), {
+            BackgroundColor3 = CONFIG.UI.ButtonHover
+        }):Play()
+    end))
+    addConnection(button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.1), {
+            BackgroundColor3 = CONFIG.UI.Button
+        }):Play()
+    end))
+    return button
+end
+
+local aimLabSmoothnessLabel = createAimLabValueLabel(
+    "SmoothnessValue",
+    "SMOOTHNESS: 35%",
+    UDim2.fromOffset(75, 310)
+)
+local aimLabSmoothnessDown = createAimLabStepButton(
+    "SmoothnessDown",
+    "−",
+    UDim2.fromOffset(28, 307)
+)
+local aimLabSmoothnessUp = createAimLabStepButton(
+    "SmoothnessUp",
+    "+",
+    UDim2.fromOffset(226, 307)
+)
+
+local aimLabFOVLabel = createAimLabValueLabel(
+    "FOVRadiusValue",
+    "FOV RADIUS: 190 PX",
+    UDim2.fromOffset(75, 354)
+)
+local aimLabFOVDown = createAimLabStepButton(
+    "FOVRadiusDown",
+    "−",
+    UDim2.fromOffset(28, 351)
+)
+local aimLabFOVUp = createAimLabStepButton(
+    "FOVRadiusUp",
+    "+",
+    UDim2.fromOffset(226, 351)
+)
+
+local aimLabRingButton, aimLabRingText = createButton(aimLabFrame, "FOV RING: ON", nil)
+aimLabRingButton.Name = "FOVRingToggle"
+aimLabRingButton.Position = UDim2.fromOffset(12, 394)
+
+local aimLabHint = Instance.new("TextLabel")
+aimLabHint.Name = "Hint"
+aimLabHint.Size = UDim2.new(1, -24, 0, 22)
+aimLabHint.Position = UDim2.fromOffset(12, 430)
+aimLabHint.BackgroundTransparency = 1
+aimLabHint.Text = "X  Toggle  •  C  Next target  •  RightAlt  Settings"
+aimLabHint.TextColor3 = CONFIG.UI.Gray
+aimLabHint.TextSize = 9
+aimLabHint.Font = Enum.Font.Gotham
+aimLabHint.TextWrapped = true
+aimLabHint.ZIndex = 1001
+aimLabHint.Parent = aimLabFrame
+
+local aimLabFOVCircle = Instance.new("Frame")
+aimLabFOVCircle.Name = "AimLabFOVCircle"
+aimLabFOVCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+aimLabFOVCircle.Size = UDim2.fromOffset(
+    CONFIG.Aimbot.FOVRadius * 2,
+    CONFIG.Aimbot.FOVRadius * 2
+)
+aimLabFOVCircle.BackgroundTransparency = 1
+aimLabFOVCircle.BorderSizePixel = 0
+aimLabFOVCircle.Visible = false
+aimLabFOVCircle.ZIndex = 950
+aimLabFOVCircle.Parent = gui
+addCorner(aimLabFOVCircle, 999)
+local aimLabFOVStroke = addStroke(
+    aimLabFOVCircle,
+    CONFIG.UI.Orange,
+    0.12,
+    1.5
+)
+
 local PANEL_OPEN_INFO = TweenInfo.new(0.45, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local PANEL_CLOSE_INFO = TweenInfo.new(0.40, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
 local panelAppearance = {}
@@ -878,17 +1093,22 @@ end
 local guiVisible = true
 local localWasVisibleBeforeGuiHide = false
 local playerTPWasVisibleBeforeGuiHide = false
+local aimLabWasVisibleBeforeGuiHide = false
 local function toggleGuiVisibility()
     if guiVisible then
         guiVisible = false
         localWasVisibleBeforeGuiHide = panelTargetVisibility[localFrame] == true or localFrame.Visible
         playerTPWasVisibleBeforeGuiHide = panelTargetVisibility[playerTPFrame] == true or playerTPFrame.Visible
+        aimLabWasVisibleBeforeGuiHide = panelTargetVisibility[aimLabFrame] == true or aimLabFrame.Visible
         animatePanel(mainFrame, false)
         if localWasVisibleBeforeGuiHide then
             animatePanel(localFrame, false)
         end
         if playerTPWasVisibleBeforeGuiHide then
             animatePanel(playerTPFrame, false)
+        end
+        if aimLabWasVisibleBeforeGuiHide then
+            animatePanel(aimLabFrame, false)
         end
         task.delay(0.42, function()
             if not guiVisible and gui and gui.Parent then
@@ -904,6 +1124,9 @@ local function toggleGuiVisibility()
         end
         if playerTPWasVisibleBeforeGuiHide then
             animatePanel(playerTPFrame, true)
+        end
+        if aimLabWasVisibleBeforeGuiHide then
+            animatePanel(aimLabFrame, true)
         end
     end
 end
@@ -1732,50 +1955,93 @@ local function isValidAimbotTarget(player)
     end
     return true
 end
+local function hasAimbotLineOfSight(targetPart, camera)
+    if not CONFIG.Aimbot.RequireLineOfSight then
+        return true
+    end
+
+    if not targetPart or not camera then
+        return false
+    end
+
+    local origin = camera.CFrame.Position
+    local direction = targetPart.Position - origin
+    if direction.Magnitude < 0.001 then
+        return false
+    end
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = {Character}
+    raycastParams.IgnoreWater = true
+
+    local result = workspace:Raycast(origin, direction, raycastParams)
+    return result == nil or result.Instance:IsDescendantOf(targetPart.Parent)
+end
+
 local function getValidTargets()
     local targets = {}
     if not isCharacterReady() then
         return targets
     end
+
+    local camera = workspace.CurrentCamera
+    local viewportCenter = camera and camera.ViewportSize * 0.5 or Vector2.zero
+    local screenScores = {}
+    local distanceScores = {}
+
     for _, player in ipairs(Players:GetPlayers()) do
         if isValidAimbotTarget(player) then
-            table.insert(targets, player)
-        end
-    end
-    local camera = workspace.CurrentCamera
-    if camera then
-        local viewportCenter = camera.ViewportSize * 0.5
-        local screenScores = {}
-
-        for _, player in ipairs(targets) do
             local targetPart = getTargetPart(player)
-            if targetPart then
+            local includeTarget = targetPart ~= nil
+            local screenScore = math.huge
+
+            if targetPart and camera then
                 local screenPosition, onScreen = camera:WorldToViewportPoint(targetPart.Position)
                 if onScreen then
                     local offset = Vector2.new(screenPosition.X, screenPosition.Y) - viewportCenter
-                    screenScores[player] = offset.Magnitude
-                else
-                    screenScores[player] = math.huge
+                    screenScore = offset.Magnitude
                 end
-            else
-                screenScores[player] = math.huge
+
+                if CONFIG.Aimbot.UseFOV
+                    and (not onScreen or screenScore > CONFIG.Aimbot.FOVRadius) then
+                    includeTarget = false
+                end
+
+                if includeTarget and not hasAimbotLineOfSight(targetPart, camera) then
+                    includeTarget = false
+                end
+            elseif CONFIG.Aimbot.UseFOV then
+                includeTarget = false
+            end
+
+            if includeTarget then
+                table.insert(targets, player)
+                screenScores[player] = screenScore
+                distanceScores[player] = targetPart and HumanoidRootPart
+                    and (targetPart.Position - HumanoidRootPart.Position).Magnitude
+                    or math.huge
             end
         end
-
-        table.sort(targets, function(a, b)
-            local aScore = screenScores[a] or math.huge
-            local bScore = screenScores[b] or math.huge
-            if aScore == bScore then
-                local aPart = getTargetPart(a)
-                local bPart = getTargetPart(b)
-                if aPart and bPart and HumanoidRootPart then
-                    return (aPart.Position - HumanoidRootPart.Position).Magnitude
-                        < (bPart.Position - HumanoidRootPart.Position).Magnitude
-                end
-            end
-            return aScore < bScore
-        end)
     end
+
+    table.sort(targets, function(a, b)
+        local aPrimary
+        local bPrimary
+        if CONFIG.Aimbot.TargetPriority == "DISTANCE" then
+            aPrimary = distanceScores[a] or math.huge
+            bPrimary = distanceScores[b] or math.huge
+        else
+            aPrimary = screenScores[a] or math.huge
+            bPrimary = screenScores[b] or math.huge
+        end
+
+        if aPrimary == bPrimary then
+            return (distanceScores[a] or math.huge) < (distanceScores[b] or math.huge)
+        end
+        return aPrimary < bPrimary
+    end)
+
     return targets
 end
 local function setCurrentTarget(player)
@@ -1784,9 +2050,11 @@ local function setCurrentTarget(player)
     end
     state.CurrentTarget = player
     if player then
+        aimLabTarget.Text = "TARGET: " .. player.Name
         targetStatus.Text = "TARGET: " .. player.Name
         targetStatus.TextColor3 = CONFIG.UI.Yellow
     else
+        aimLabTarget.Text = "TARGET: NONE"
         targetStatus.Text = "TARGET: NONE"
         targetStatus.TextColor3 = CONFIG.UI.Gray
     end
@@ -1832,6 +2100,72 @@ local function nextTarget()
     setCurrentTarget(targets[currentPosition])
 end
 local aimbotCameraState = nil
+local function refreshAimLabUI()
+    local inStudio = RunService:IsStudio()
+    aimLabStatus.Text = inStudio and "STUDIO MODE • READY" or "STUDIO ONLY • BLOCKED"
+    aimLabStatus.TextColor3 = inStudio and CONFIG.UI.Green or CONFIG.UI.Red
+
+    setButtonState(
+        aimLabMasterButton,
+        state.Aimbot,
+        "AIM ASSIST: " .. (state.Aimbot and "ON" or "OFF")
+    )
+    setButtonState(
+        aimLabFOVButton,
+        CONFIG.Aimbot.UseFOV,
+        "FOV FILTER: " .. (CONFIG.Aimbot.UseFOV and "ON" or "OFF")
+    )
+    setButtonState(
+        aimLabPriorityButton,
+        CONFIG.Aimbot.TargetPriority == "SCREEN",
+        "PRIORITY: " .. (CONFIG.Aimbot.TargetPriority == "SCREEN" and "SCREEN CENTER" or "DISTANCE")
+    )
+    setButtonState(
+        aimLabLineOfSightButton,
+        CONFIG.Aimbot.RequireLineOfSight,
+        "LINE OF SIGHT: " .. (CONFIG.Aimbot.RequireLineOfSight and "ON" or "OFF")
+    )
+    setButtonState(
+        aimLabRingButton,
+        CONFIG.Aimbot.ShowFOV,
+        "FOV RING: " .. (CONFIG.Aimbot.ShowFOV and "ON" or "OFF")
+    )
+
+    aimLabSmoothnessLabel.Text = string.format(
+        "SMOOTHNESS: %d%%",
+        math.floor(CONFIG.Aimbot.Smoothness * 100 + 0.5)
+    )
+    aimLabFOVLabel.Text = "FOV RADIUS: " .. tostring(CONFIG.Aimbot.FOVRadius) .. " PX"
+
+    local diameter = CONFIG.Aimbot.FOVRadius * 2
+    aimLabFOVCircle.Size = UDim2.fromOffset(diameter, diameter)
+    aimLabFOVCircle.Visible = state.Aimbot and CONFIG.Aimbot.ShowFOV
+end
+
+local function updateAimLabFOVPosition()
+    local camera = workspace.CurrentCamera
+    if not state.Aimbot or not CONFIG.Aimbot.ShowFOV or not camera then
+        aimLabFOVCircle.Visible = false
+        return
+    end
+
+    aimLabFOVCircle.Visible = true
+    aimLabFOVCircle.Position = UDim2.fromOffset(
+        camera.ViewportSize.X * 0.5,
+        camera.ViewportSize.Y * 0.5
+    )
+end
+
+local function createAimLabControlConnection(button, label, callback)
+    addConnection(button.MouseButton1Click:Connect(function()
+        safeCall(label, callback)
+        refreshAimLabUI()
+        if state.Aimbot then
+            chooseTarget()
+        end
+    end))
+end
+
 
 local function restoreAimbotCamera()
     if not aimbotCameraState then
@@ -1892,6 +2226,10 @@ local function setAimbot(enabled)
         enabled,
         "Aimbot: " .. (enabled and "ON" or "OFF")
     )
+    refreshAimLabUI()
+    if not enabled then
+        aimLabFOVCircle.Visible = false
+    end
 end
 
 local function updateAimbot(deltaTime)
@@ -1947,6 +2285,66 @@ addConnection(aimbotButton.MouseButton1Click:Connect(function()
         setAimbot(not state.Aimbot)
     end)
 end))
+addConnection(aimLabButton.MouseButton1Click:Connect(function()
+    togglePanel(aimLabFrame)
+end))
+addConnection(aimLabCloseButton.MouseButton1Click:Connect(function()
+    togglePanel(aimLabFrame)
+end))
+addConnection(aimLabMasterButton.MouseButton1Click:Connect(function()
+    setAimbot(not state.Aimbot)
+end))
+createAimLabControlConnection(aimLabFOVButton, "Aim Lab FOV filter", function()
+    CONFIG.Aimbot.UseFOV = not CONFIG.Aimbot.UseFOV
+end)
+createAimLabControlConnection(aimLabPriorityButton, "Aim Lab target priority", function()
+    CONFIG.Aimbot.TargetPriority = CONFIG.Aimbot.TargetPriority == "SCREEN" and "DISTANCE" or "SCREEN"
+end)
+createAimLabControlConnection(aimLabLineOfSightButton, "Aim Lab line of sight", function()
+    CONFIG.Aimbot.RequireLineOfSight = not CONFIG.Aimbot.RequireLineOfSight
+end)
+createAimLabControlConnection(aimLabRingButton, "Aim Lab FOV ring", function()
+    CONFIG.Aimbot.ShowFOV = not CONFIG.Aimbot.ShowFOV
+end)
+addConnection(aimLabSmoothnessDown.MouseButton1Click:Connect(function()
+    CONFIG.Aimbot.Smoothness = math.clamp(
+        math.floor((CONFIG.Aimbot.Smoothness - CONFIG.Aimbot.SmoothnessStep) * 100 + 0.5) / 100,
+        CONFIG.Aimbot.MinSmoothness,
+        CONFIG.Aimbot.MaxSmoothness
+    )
+    refreshAimLabUI()
+end))
+addConnection(aimLabSmoothnessUp.MouseButton1Click:Connect(function()
+    CONFIG.Aimbot.Smoothness = math.clamp(
+        math.floor((CONFIG.Aimbot.Smoothness + CONFIG.Aimbot.SmoothnessStep) * 100 + 0.5) / 100,
+        CONFIG.Aimbot.MinSmoothness,
+        CONFIG.Aimbot.MaxSmoothness
+    )
+    refreshAimLabUI()
+end))
+addConnection(aimLabFOVDown.MouseButton1Click:Connect(function()
+    CONFIG.Aimbot.FOVRadius = math.clamp(
+        CONFIG.Aimbot.FOVRadius - CONFIG.Aimbot.FOVStep,
+        CONFIG.Aimbot.MinFOVRadius,
+        CONFIG.Aimbot.MaxFOVRadius
+    )
+    refreshAimLabUI()
+    if state.Aimbot then
+        chooseTarget()
+    end
+end))
+addConnection(aimLabFOVUp.MouseButton1Click:Connect(function()
+    CONFIG.Aimbot.FOVRadius = math.clamp(
+        CONFIG.Aimbot.FOVRadius + CONFIG.Aimbot.FOVStep,
+        CONFIG.Aimbot.MinFOVRadius,
+        CONFIG.Aimbot.MaxFOVRadius
+    )
+    refreshAimLabUI()
+    if state.Aimbot then
+        chooseTarget()
+    end
+end))
+refreshAimLabUI()
 local function createPlayerTPButton(player)
     if player == LocalPlayer then
         return
@@ -2142,6 +2540,7 @@ end
 makeDraggable(title, mainFrame)
 makeDraggable(localTitle, localFrame)
 makeDraggable(playerTPTitle, playerTPFrame)
+makeDraggable(aimLabTitle, aimLabFrame)
 local function setupMovementWatchers()
     if not Humanoid then
         return
@@ -2256,6 +2655,7 @@ RunService:BindToRenderStep(
             end)
         end
         updateFly()
+        updateAimLabFOVPosition()
         updateAimbot(deltaTime)
         if state.Highlight then
             refreshHighlights(false)
@@ -2337,6 +2737,9 @@ bindKey("MegaPanelV13_NextTarget", CONFIG.FeatureKeys.NextTarget, function()
         nextTarget()
     end
 end)
+bindKey("MegaPanelV14_AimLab", CONFIG.FeatureKeys.AimbotSettings, function()
+    togglePanel(aimLabFrame)
+end)
 bindKey("MegaPanelV13_Highlight", CONFIG.FeatureKeys.Highlight, function()
     setHighlight(not state.Highlight)
 end)
@@ -2363,6 +2766,7 @@ safeCall("initial highlight refresh", refreshHighlights)
 setButtonState(infiniteJumpButton, state.InfiniteJump, "Inf. Jump: " .. (state.InfiniteJump and "ON" or "OFF"))
 setButtonState(flyButton, state.Flying, "Flying: " .. (state.Flying and "ON" or "OFF"))
 setButtonState(aimbotButton, state.Aimbot, "Aimbot: " .. (state.Aimbot and "ON" or "OFF"))
+refreshAimLabUI()
 setButtonState(noclipButton, state.Noclip, "Noclip: " .. (state.Noclip and "ON" or "OFF"))
 setButtonState(bhopButton, state.Bhop, "Bhop: " .. (state.Bhop and "ON" or "OFF"))
 setButtonState(highlightButton, state.Highlight, "Highlight: " .. (state.Highlight and "ON" or "OFF"))
@@ -2464,6 +2868,10 @@ addConnection(closeButton.MouseButton1Click:Connect(function()
     if playerTPFrame.Visible then
         animatePanel(playerTPFrame, false)
     end
+    if aimLabFrame.Visible then
+        animatePanel(aimLabFrame, false)
+    end
+    aimLabFOVCircle.Visible = false
     task.delay(0.42, cleanup)
 end))
 print("[MegaPanel V14 Cosmic] loaded successfully.")
