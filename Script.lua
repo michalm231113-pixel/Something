@@ -940,8 +940,8 @@ aimLabRingButton.Position = UDim2.fromOffset(12, 394)
 
 local aimLabHint = Instance.new("TextLabel")
 aimLabHint.Name = "Hint"
-aimLabHint.Size = UDim2.new(1, -24, 0, 22)
-aimLabHint.Position = UDim2.fromOffset(12, 430)
+aimLabHint.Size = UDim2.new(1, -24, 0, 14)
+aimLabHint.Position = UDim2.fromOffset(12, 438)
 aimLabHint.BackgroundTransparency = 1
 aimLabHint.Text = "X  Toggle  •  C  Next target  •  RightAlt  Settings"
 aimLabHint.TextColor3 = CONFIG.UI.Gray
@@ -1979,6 +1979,27 @@ local function hasAimbotLineOfSight(targetPart, camera)
     return result == nil or result.Instance:IsDescendantOf(targetPart.Parent)
 end
 
+local function isAimbotTargetAllowed(targetPart, camera)
+    if not targetPart or not camera then
+        return false
+    end
+
+    if CONFIG.Aimbot.UseFOV then
+        local screenPosition, onScreen = camera:WorldToViewportPoint(targetPart.Position)
+        if not onScreen then
+            return false
+        end
+
+        local viewportCenter = camera.ViewportSize * 0.5
+        local screenOffset = Vector2.new(screenPosition.X, screenPosition.Y) - viewportCenter
+        if screenOffset.Magnitude > CONFIG.Aimbot.FOVRadius then
+            return false
+        end
+    end
+
+    return hasAimbotLineOfSight(targetPart, camera)
+end
+
 local function getValidTargets()
     local targets = {}
     if not isCharacterReady() then
@@ -2209,6 +2230,7 @@ local function setAimbot(enabled)
         setCurrentTarget(nil)
         setButtonState(aimbotButton, false, "Aimbot: OFF")
         warn("[MegaPanel] Funkcja testowego celowania jest dostępna wyłącznie w Roblox Studio.")
+        refreshAimLabUI()
         return
     end
 
@@ -2259,12 +2281,24 @@ local function updateAimbot(deltaTime)
     end
 
     local targetPart = getTargetPart(target)
-    if not targetPart or not takeAimbotCamera() then
+    local camera = workspace.CurrentCamera
+    if not camera then
+        restoreAimbotCamera()
         return
     end
 
-    local camera = workspace.CurrentCamera
-    if not camera then
+    if not targetPart or not isAimbotTargetAllowed(targetPart, camera) then
+        chooseTarget()
+        target = state.CurrentTarget
+        targetPart = target and getTargetPart(target) or nil
+    end
+
+    if not target or not targetPart then
+        restoreAimbotCamera()
+        return
+    end
+
+    if not takeAimbotCamera() then
         return
     end
 
