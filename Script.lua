@@ -1448,9 +1448,11 @@ local function getTargetPart(player)
     if not character then
         return nil
     end
-    return character:FindFirstChild(CONFIG.Aimbot.TargetPart)
-        or character:FindFirstChild("Head")
-        or character:FindFirstChild("HumanoidRootPart")
+    local targetPart = character:FindFirstChild(CONFIG.Aimbot.TargetPart)
+    if targetPart and targetPart:IsA("BasePart") then
+        return targetPart
+    end
+    return nil
 end
 local function getTargetHumanoid(player)
     local character = player.Character
@@ -1740,16 +1742,40 @@ local function getValidTargets()
             table.insert(targets, player)
         end
     end
-    table.sort(targets, function(a, b)
-        local aPart = getTargetPart(a)
-        local bPart = getTargetPart(b)
-        if not aPart or not bPart or not HumanoidRootPart then
-            return false
+    local camera = workspace.CurrentCamera
+    if camera then
+        local viewportCenter = camera.ViewportSize * 0.5
+        local screenScores = {}
+
+        for _, player in ipairs(targets) do
+            local targetPart = getTargetPart(player)
+            if targetPart then
+                local screenPosition, onScreen = camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen then
+                    local offset = Vector2.new(screenPosition.X, screenPosition.Y) - viewportCenter
+                    screenScores[player] = offset.Magnitude
+                else
+                    screenScores[player] = math.huge
+                end
+            else
+                screenScores[player] = math.huge
+            end
         end
-        local aDistance = (aPart.Position - HumanoidRootPart.Position).Magnitude
-        local bDistance = (bPart.Position - HumanoidRootPart.Position).Magnitude
-        return aDistance < bDistance
-    end)
+
+        table.sort(targets, function(a, b)
+            local aScore = screenScores[a] or math.huge
+            local bScore = screenScores[b] or math.huge
+            if aScore == bScore then
+                local aPart = getTargetPart(a)
+                local bPart = getTargetPart(b)
+                if aPart and bPart and HumanoidRootPart then
+                    return (aPart.Position - HumanoidRootPart.Position).Magnitude
+                        < (bPart.Position - HumanoidRootPart.Position).Magnitude
+                end
+            end
+            return aScore < bScore
+        end)
+    end
     return targets
 end
 local function setCurrentTarget(player)
@@ -1805,46 +1831,112 @@ local function nextTarget()
     state.TargetIndex = currentPosition
     setCurrentTarget(targets[currentPosition])
 end
+local aimbotCameraState = nil
+
+local function restoreAimbotCamera()
+    if not aimbotCameraState then
+        return
+    end
+
+    local savedState = aimbotCameraState
+    aimbotCameraState = nil
+
+    local camera = savedState.Camera
+    if camera and camera.Parent then
+        camera.CameraType = savedState.CameraType
+        if savedState.CameraSubject and savedState.CameraSubject.Parent then
+            camera.CameraSubject = savedState.CameraSubject
+        end
+    end
+end
+
+local function takeAimbotCamera()
+    local camera = workspace.CurrentCamera
+    if not camera then
+        return false
+    end
+
+    if not aimbotCameraState or aimbotCameraState.Camera ~= camera then
+        restoreAimbotCamera()
+        aimbotCameraState = {
+            Camera = camera,
+            CameraType = camera.CameraType,
+            CameraSubject = camera.CameraSubject,
+        }
+    end
+
+    camera.CameraType = Enum.CameraType.Scriptable
+    return true
+end
+
 local function setAimbot(enabled)
+    if enabled and not RunService:IsStudio() then
+        state.Aimbot = false
+        setCurrentTarget(nil)
+        setButtonState(aimbotButton, false, "Aimbot: OFF")
+        warn("[MegaPanel] Funkcja testowego celowania jest dostępna wyłącznie w Roblox Studio.")
+        return
+    end
+
     state.Aimbot = enabled
     if enabled then
         state.TargetIndex = 1
         chooseTarget()
     else
         setCurrentTarget(nil)
+        restoreAimbotCamera()
     end
+
     setButtonState(
         aimbotButton,
         enabled,
         "Aimbot: " .. (enabled and "ON" or "OFF")
     )
 end
+
 local function updateAimbot(deltaTime)
-    if not state.Aimbot or not isCharacterReady() then
+    if not state.Aimbot then
         return
     end
-    if UserInputService:GetFocusedTextBox() then
+
+    if not RunService:IsStudio() then
+        setAimbot(false)
         return
     end
+
+    if not isCharacterReady() or UserInputService:GetFocusedTextBox() then
+        restoreAimbotCamera()
+        return
+    end
+
     local target = state.CurrentTarget
     if not isValidAimbotTarget(target) then
         chooseTarget()
         target = state.CurrentTarget
     end
+
     if not target then
+        restoreAimbotCamera()
         return
     end
+
     local targetPart = getTargetPart(target)
-    local camera = workspace.CurrentCamera
-    if not targetPart or not camera then
+    if not targetPart or not takeAimbotCamera() then
         return
     end
+
+    local camera = workspace.CurrentCamera
+    if not camera then
+        return
+    end
+
     local origin = camera.CFrame.Position
     local direction = targetPart.Position - origin
     if direction.Magnitude < 0.001 then
         return
     end
-    local desired = CFrame.lookAt(origin, origin + direction.Unit)
+
+    local desired = CFrame.lookAt(origin, targetPart.Position)
     local dt = math.max(deltaTime or (1 / 60), 0)
     local baseAlpha = math.clamp(CONFIG.Aimbot.Smoothness, 0.01, 1)
     local alpha = 1 - math.pow(1 - baseAlpha, dt * 60)
@@ -2287,6 +2379,7 @@ local function cleanup()
     state.InfiniteJump = false
     state.Bhop = false
     state.Aimbot = false
+    restoreAimbotCamera()
     state.Noclip = false
     state.ClickTP = false
     state.Highlight = false
