@@ -4,8 +4,23 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ContextActionService = game:GetService("ContextActionService")
+-- This panel is a client-side Studio test LocalScript.
+if not RunService:IsClient() then
+    warn("[MegaPanel] This file must run as a LocalScript on the client.")
+    return
+end
+
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+if not LocalPlayer then
+    warn("[MegaPanel] Players.LocalPlayer is unavailable. Put this LocalScript in StarterPlayerScripts.")
+    return
+end
+
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+if not PlayerGui then
+    warn("[MegaPanel] PlayerGui did not become available within 10 seconds.")
+    return
+end
 local milion = 1000000
 local CONFIG = {
     UI = {
@@ -497,7 +512,6 @@ local function createMainButton(text, keyCode)
     button.Position = UDim2.fromOffset(12, 108 + ((buttonIndex - 1) * 46))
     return button
 end
-task.wait(0.1)
 local infiniteJumpButton = createMainButton("Inf. Jump: OFF", CONFIG.FeatureKeys.InfiniteJump)
 local flyButton = createMainButton("Flying: OFF", CONFIG.FeatureKeys.Fly)
 local aimbotButton = createMainButton("Aimbot: OFF", CONFIG.FeatureKeys.Aimbot)
@@ -1007,8 +1021,6 @@ local function capturePanelAppearance(panel)
         capture(descendant)
     end
 end
-task.wait(0.1)
-
 local function cancelPanelTweens(panel)
     local active = panelTweens[panel]
     if active then
@@ -1514,8 +1526,6 @@ local function startFlying()
     end
     setButtonState(flyButton, true, "Flying: ON")
 end
-task.wait(0.1)
-
 local function updateFlyControllerMode()
     if not state.Flying or not isCharacterReady() then
         return
@@ -2004,7 +2014,6 @@ local function isAimbotTargetAllowed(targetPart, camera)
 
     return hasAimbotLineOfSight(targetPart, camera)
 end
-task.wait(0.1)
 local function getValidTargets()
     local targets = {}
     if not isCharacterReady() then
@@ -2503,7 +2512,6 @@ local function stopAntiAFK()
     end
     setButtonState(antiAFKButton, false, "AFK Alert: OFF")
 end
-task.wait(0.1)
 local function startAntiAFK()
     if antiAFKConnection then
         disconnectConnection(antiAFKConnection)
@@ -2914,8 +2922,6 @@ addConnection(closeButton.MouseButton1Click:Connect(function()
     aimLabFOVCircle.Visible = false
     task.delay(0.42, cleanup)
 end))
-task.wait(0.1)
-
 print("[MegaPanel V14 Cosmic] loaded successfully.")
 print("[MegaPanel V14 Cosmic] F1 = GUI")
 print("[MegaPanel V14 Cosmic] X = Aimbot")
